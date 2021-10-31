@@ -1,0 +1,44 @@
+Package: finfeatures
+Type: Package
+Title: Features for investing and finance
+Version: 0.1.0
+Author: c(
+    person("Mislav", "Sagovac", email = "mislav.sagovac@contentio.biz", role = c("cre","aut")))
+Maintainer: Mislav Sagovac <mislav.sagovac@contentio.biz>
+Description: Create and filter features that are helpfull in predictio problems in
+    finance. Some basic features filtering techniques are also availabe.
+License: GPL-3
+URL: https://github.com/MislavSag/finfeatures
+BugReports: https://github.com/MislavSag/finfeatures/issues
+Imports:
+    R6,
+    data.table,
+    checkmate,
+    TTR,
+    roll,
+    QuantTools,
+    forecast,
+    doParallel,
+    runner,
+    exuber,
+    zoo,
+    parallel,
+    GAS,
+    ptsuite,
+    reticulate,
+    bidask,
+    parallel,
+    doParallel,
+    mlr3misc,
+    backports,
+    lgr
+Remotes:
+    github::ottosven/backCUSUM,
+    github::andrewuhl/RollingWindow,
+    github::hendersontrent/theft
+Suggests:
+    roxygen2,
+    devtools
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.1.2
