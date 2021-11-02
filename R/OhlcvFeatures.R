@@ -142,7 +142,7 @@ OhlcvFeatures = R6::R6Class(
       # estimate changepoints breaks
       for (i in c(370, 500, 1000, 5000)) {
         # ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
-        ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
+        ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
       }
 
       return(ohlcv)
