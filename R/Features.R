@@ -8,10 +8,11 @@
 #' @export
 #' @examples
 #' data(spy_hour)
-#' OhlcvFeaturesInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
-#'                                    quantile_divergence_window =  c(50, 100))
-#' x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
+#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+#' FeaturesInstance = Features$new(OhlcvInstance,
+#'                                 at = c(300:315, 1000:1100),
+#'                                 lag = 1L)
+#' x = FeaturesInstance$get_features()
 #' tail(x)
 Features = R6::R6Class(
   "Features",
@@ -48,7 +49,7 @@ Features = R6::R6Class(
     #' @param window window length. This argument is given internaly
     #'
     #' @return Data.table with new features.
-    get_features = function(data) {
+    get_features = function() {
 
       # prepare data
       OhlcvInstance <- self$ohlcv_object
@@ -59,17 +60,19 @@ Features = R6::R6Class(
       # data(spy_hour)
       # OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
       # ohlcv = OhlcvInstance$X
-      # at_ <- c(300:310, 500:510, 650)
+      # at_ <- c(300:315, 1000:1020)
       # lag_ <- 1L
       ######### TEST
 
       # Features from OHLLCV
+      print("Calculate Ohlcv features.")
       OhlcvFeaturesInit = OhlcvFeatures$new(windows = c(5, 22, 22 * 3, 22 * 6, 22 * 12),
                                             quantile_divergence_window =  c(22, 22*3, 22*12))
       OhlcvFeaturesSet = OhlcvFeaturesInit$get_ohlcv_features(OhlcvInstance)
-      OhlcvFeaturesSet <- OhlcvFeaturesSet[at_ - 1]
+      OhlcvFeaturesSet <- OhlcvFeaturesSet[at_ - lag_] ## HERE !!!!!!!!!!
 
       # BidAsk features
+      print("Calculate BidAsk features.")
       RollingBidAskInstance <- RollingBidAsk$new(windows = c(5, 22),
                                                  workers = 8L,
                                                  at = at_,
@@ -80,6 +83,7 @@ Features = R6::R6Class(
       RollingBidAskFeatures = RollingBidAskInstance$get_rolling_features(OhlcvInstance)
 
       # BackCUSUM features
+      print("Calculate BackCUSUM features.")
       RollingBackcusumInit = RollingBackcusum$new(windows = c(22, 66),
                                                   workers = 8L,
                                                   at = at_,
@@ -89,6 +93,7 @@ Features = R6::R6Class(
       RollingBackCusumFeatures = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
 
       # Exuber features
+      print("Calculate Exuber features.")
       RollingExuberInit = RollingExuber$new(windows = c(100, 300, 600),
                                             workers = 1L,
                                             at = at_,
@@ -99,6 +104,7 @@ Features = R6::R6Class(
       RollingExuberFeatures = RollingExuberInit$get_rolling_features(OhlcvInstance)
 
       # Forecast Features
+      print("Calculate AutoArima features.")
       RollingForecatsInstance = RollingForecats$new(windows = c(300),
                                                     workers = 8L,
                                                     lag = lag_,
@@ -108,7 +114,7 @@ Features = R6::R6Class(
                                                     forecast_type = "autoarima",
                                                     h = 22)
       RollingForecatsAutoarimaFeatures = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
-
+      print("Calculate Nnetar features.")
       RollingForecatsInstance = RollingForecats$new(windows = c(300),
                                                     workers = 8L,
                                                     lag = lag_,
@@ -120,6 +126,7 @@ Features = R6::R6Class(
       RollingForecatNnetarFeatures = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 
       # GAS
+      print("Calculate GAS features.")
       RollingGasInit = RollingGas$new(windows = c(100),
                                       workers = 8L,
                                       at = at_,
@@ -132,6 +139,7 @@ Features = R6::R6Class(
       RollingGasFeatures = RollingGasInit$get_rolling_features(OhlcvInstance)
 
       # Gpd features
+      print("Calculate Gpd features.")
       RollingGpdInit = RollingGpd$new(windows = c(100, 200),
                                       workers = 8L,
                                       at = at_,
@@ -142,6 +150,7 @@ Features = R6::R6Class(
       RollingGpdFeatures = RollingGpdInit$get_rolling_features(OhlcvInstance)
 
       # theft catch22 features
+      print("Calculate Catch22 features.")
       RollingTheftInit = RollingTheft$new(windows = c(22, 22 * 3, 22 * 12),
                                           workers = 8L,
                                           at = at_,
@@ -152,6 +161,7 @@ Features = R6::R6Class(
       RollingTheftCatch22Features = RollingTheftInit$get_rolling_features(OhlcvInstance)
 
       # theft feasts features
+      print("Calculate feasts features.")
       RollingTheftInit = RollingTheft$new(windows = c(22, 22 * 3, 22 * 12),
                                           workers = 8L,
                                           at = at_,
@@ -162,6 +172,7 @@ Features = R6::R6Class(
       RollingTheftFeastsFatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
 
       # theft tsfeatures features
+      print("Calculate Tsfeatures features.")
       RollingTheftInit = RollingTheft$new(windows = c(22 * 3, 22 * 12),
                                           workers = 1L,
                                           at = at_,
@@ -172,6 +183,7 @@ Features = R6::R6Class(
       RollingTheftTsfeaturesFeatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
 
       # theft tsfel features
+      print("Calculate tsfel features.")
       RollingTheftInit = RollingTheft$new(windows = 200,
                                           workers = 1L,
                                           at = at_,
@@ -183,17 +195,13 @@ Features = R6::R6Class(
 
       # merge all features
       features <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"), all.x = TRUE, all.y = FALSE),
-                         list(RollingBidAskFeatures, RollingBackCusumFeatures, RollingExuberFeatures,
+                         list(OhlcvFeaturesSet, RollingBidAskFeatures, RollingBackCusumFeatures, RollingExuberFeatures,
                               RollingForecatsAutoarimaFeatures, RollingForecatNnetarFeatures,
-                              RollingGasFeatures, RollingGpdFeature, RollingGpdFeatures,
-                              RollingTheftCatch22Features, RollingTheftFeastsFatures,
-                              RollingTheftTsfeaturesFeatures, RollingTheftTsfelFeatures))
+                              RollingGasFeatures, RollingGpdFeatures, RollingTheftCatch22Features,
+                              RollingTheftFeastsFatures, RollingTheftTsfeaturesFeatures, RollingTheftTsfelFeatures))
 
 
-      OhlcvFeaturesSet[at_ - 1, .(symbol, date)] == RollingBidAskFeatures[, .(symbol, date)]
-
-
-      return(ohlcv)
+      return(features)
     }
   )
 )

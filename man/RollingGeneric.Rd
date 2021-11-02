@@ -3,12 +3,44 @@
 \name{RollingGeneric}
 \alias{RollingGeneric}
 \title{RollingGeneric Class}
+\arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of workers. Greater than 1 for parallle processing}
+
+\item{lag}{Lag variable in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
+\item{x}{Ohlcv object.}
+
+\item{window}{Rolling window lengths.}
+
+\item{Ohlcv}{Ohlcv object}
+}
+\value{
+A new `RollingGeneric` object.
+
+Depending on used classes for clalculating features. It returns df.
+
+Depending on used classes for clalculating features. It returns df.
+}
 \description{
 This is the abstract base class for tasks that start with "Rolling".
 It helps calculating rolling values of features.
+
+Create a new RollingGeneric object.
+
+This function will be used in application. For now it doesn't do anythin
+
+Helping function for calculating rolling features.
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
+\section{Fields}{
+
 \describe{
 \item{\code{windows}}{Vector of windows that will be applied on features.}
 
@@ -21,112 +53,5 @@ It helps calculating rolling values of features.
 \item{\code{na_pad}}{Argument na_pad from runner package}
 
 \item{\code{simplify}}{Argument simplify from runner package.}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{RollingGeneric$new()}}
-\item \href{#method-rolling_function}{\code{RollingGeneric$rolling_function()}}
-\item \href{#method-get_rolling_features}{\code{RollingGeneric$get_rolling_features()}}
-\item \href{#method-clone}{\code{RollingGeneric$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new RollingGeneric object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGeneric$new(
-  windows = 10,
-  workers = 1L,
-  lag = integer(1),
-  at = integer(0),
-  na_pad = TRUE,
-  simplify = FALSE
-)}\if{html}{\out{</div>}}
-}
+}}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{windows}}{Vector of windows that will be applied on features.}
-
-\item{\code{workers}}{Number of workers. Greater than 1 for parallle processing}
-
-\item{\code{lag}}{Lag variable in runner package.}
-
-\item{\code{at}}{Argument at in runner package.}
-
-\item{\code{na_pad}}{Argument na_pad in runner package.}
-
-\item{\code{simplify}}{Argument simplify in runner package.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{RollingGeneric} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rolling_function"></a>}}
-\if{latex}{\out{\hypertarget{method-rolling_function}{}}}
-\subsection{Method \code{rolling_function()}}{
-This function will be used in application. For now it doesn't do anythin
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGeneric$rolling_function(x, window)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{x}}{Ohlcv object.}
-
-\item{\code{window}}{Rolling window lengths.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Depending on used classes for clalculating features. It returns df.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_rolling_features"></a>}}
-\if{latex}{\out{\hypertarget{method-get_rolling_features}{}}}
-\subsection{Method \code{get_rolling_features()}}{
-Helping function for calculating rolling features.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGeneric$get_rolling_features(Ohlcv)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{Ohlcv}}{Ohlcv object}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Depending on used classes for clalculating features. It returns df.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGeneric$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
-}

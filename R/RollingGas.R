@@ -30,7 +30,7 @@
 #'                                 prediction_horizont = 10)
 #' x = RollingGasInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingGas = R6Class(
+RollingGas = R6::R6Class(
   "RollingGas",
   inherit = RollingGeneric,
 

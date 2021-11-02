@@ -3,9 +3,47 @@
 \name{RollingForecats}
 \alias{RollingForecats}
 \title{RollingForecats Class}
+\arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of workers. Greater than 1 for parallle processing}
+
+\item{lag}{Lag variable in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
+\item{forecast_type}{Type of time series forecasts.}
+
+\item{h}{Forecast horizont.}
+
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+A new `RollingForecats` object.
+
+Calculate rolling features from forecasting package.
+}
 \description{
 Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+
+Create a new RollingForecats object.
+
+Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{forecast_type}}{Type of time series forecasts.}
+
+\item{\code{h}}{Forecast horizont.}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -31,114 +69,4 @@ RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
                                               h = 10)
 x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 head(x)
-}
-\section{Super class}{
-\code{\link[finfeatures:RollingGeneric]{finfeatures::RollingGeneric}} -> \code{RollingForecats}
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{forecast_type}}{Type of time series forecasts.}
-
-\item{\code{h}}{Forecast horizont.}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{RollingForecats$new()}}
-\item \href{#method-rolling_function}{\code{RollingForecats$rolling_function()}}
-\item \href{#method-clone}{\code{RollingForecats$clone()}}
-}
-}
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="finfeatures" data-topic="RollingGeneric" data-id="get_rolling_features">}\href{../../finfeatures/html/RollingGeneric.html#method-get_rolling_features}{\code{finfeatures::RollingGeneric$get_rolling_features()}}\out{</span>}
-}
-\out{</details>}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new RollingForecats object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingForecats$new(
-  windows,
-  workers,
-  lag,
-  at,
-  na_pad,
-  simplify,
-  forecast_type = c("autoarima", "nnetar"),
-  h = 10
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{windows}}{Vector of windows that will be applied on features.}
-
-\item{\code{workers}}{Number of workers. Greater than 1 for parallle processing}
-
-\item{\code{lag}}{Lag variable in runner package.}
-
-\item{\code{at}}{Argument at in runner package.}
-
-\item{\code{na_pad}}{Argument na_pad in runner package.}
-
-\item{\code{simplify}}{Argument simplify in runner package.}
-
-\item{\code{forecast_type}}{Type of time series forecasts.}
-
-\item{\code{h}}{Forecast horizont.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{RollingForecats} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rolling_function"></a>}}
-\if{latex}{\out{\hypertarget{method-rolling_function}{}}}
-\subsection{Method \code{rolling_function()}}{
-Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingForecats$rolling_function(data, window)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Calculate rolling features from forecasting package.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingForecats$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

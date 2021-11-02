@@ -24,7 +24,7 @@
 #'                                       simplify = FALSE)
 #' x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingExuber = R6Class(
+RollingExuber = R6::R6Class(
   "RollingExuber",
   inherit = RollingGeneric,
 
@@ -79,7 +79,7 @@ RollingExuber = R6Class(
         return(NULL)
       } else {
         stats <- exuber::tidy(y)
-        bsadf <- data.table::last(augment(y))[, 4:5]
+        bsadf <- data.table::last(exuber::augment(y))[, 4:5]
         result <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], stats, bsadf)
         result$id <- NULL
         colnames(result)[3:ncol(result)] <- paste("exuber", window, self$exuber_lag, colnames(result)[3:ncol(result)], sep = "_")

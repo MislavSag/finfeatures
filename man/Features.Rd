@@ -3,97 +3,36 @@
 \name{Features}
 \alias{Features}
 \title{Features Class}
+\arguments{
+\item{ohlcv_object}{Length of window for calculating rolling versions of the indicators.}
+
+\item{at}{Argument `at` in runner package}
+
+\item{lag}{Argument `lag` in runner package}
+
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+A new `Features` object.
+
+Data.table with new features.
+}
 \description{
 Calculates all features for financial time series forecasting.
+
+Create a new OhlcvFeatures object.
+
+Function calculates basic features from OHLCV financial data
 }
-\examples{
-data(spy_hour)
-OhlcvFeaturesInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
-                                   quantile_divergence_window =  c(50, 100))
-x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
-tail(x)
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
+\section{Fields}{
+
 \describe{
 \item{\code{ohlcv_object}}{OHLCV object}
 
-\item{\code{at}}{Argument \code{at} in runner package}
+\item{\code{at}}{Argument `at` in runner package}
 
-\item{\code{lag}}{Argument \code{lag} in runner package}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{Features$new()}}
-\item \href{#method-get_features}{\code{Features$get_features()}}
-\item \href{#method-clone}{\code{Features$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new OhlcvFeatures object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Features$new(ohlcv_object, at, lag = 1L)}\if{html}{\out{</div>}}
-}
+\item{\code{lag}}{Argument `lag` in runner package}
+}}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{ohlcv_object}}{Length of window for calculating rolling versions of the indicators.}
-
-\item{\code{at}}{Argument \code{at} in runner package}
-
-\item{\code{lag}}{Argument \code{lag} in runner package}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{Features} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_features"></a>}}
-\if{latex}{\out{\hypertarget{method-get_features}{}}}
-\subsection{Method \code{get_features()}}{
-Function calculates basic features from OHLCV financial data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Features$get_features(data)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data.table with new features.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Features$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
-}

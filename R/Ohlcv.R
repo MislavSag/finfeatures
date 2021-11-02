@@ -3,10 +3,8 @@
 #' @description
 #' This function helps preparing data for feature calculation.
 #'
-#' @importFrom R6 R6Class is.R6
-#'
 #' @export
-Ohlcv = R6Class(
+Ohlcv = R6::R6Class(
   "Ohlcv",
 
   public = list(
@@ -28,6 +26,7 @@ Ohlcv = R6Class(
 
     #' @description
     #' Create a new Ohlcv object.
+    #'
     #' @param X Input data.
     #' @param id_col Id column.
     #' @param date_col Date column.

@@ -3,9 +3,35 @@
 \name{OhlcvFeatures}
 \alias{OhlcvFeatures}
 \title{OhlcvFeatures Class}
+\arguments{
+\item{windows}{Length of window for calculating rolling versions of the indicators.}
+
+\item{quantile_divergence_window}{Window sizes from divergence from quantiles indicator.}
+
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+A new `RollingGpd` object.
+
+Data.table with new features.
+}
 \description{
 Function calculates basic features from OHLCV financial data
+
+Create a new OhlcvFeatures object.
+
+Function calculates basic features from OHLCV financial data
 }
+\section{Fields}{
+
+\describe{
+\item{\code{windows}}{Length of window for calculating rolling versions of the indicators.}
+
+\item{\code{quantile_divergence_window}}{Window sizes from divergence from quantiles indicator.}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvFeaturesInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -13,83 +39,4 @@ RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
                                    quantile_divergence_window =  c(50, 100))
 x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
 tail(x)
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{windows}}{Length of window for calculating rolling versions of the indicators.}
-
-\item{\code{quantile_divergence_window}}{Window sizes from divergence from quantiles indicator.}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{OhlcvFeatures$new()}}
-\item \href{#method-get_ohlcv_features}{\code{OhlcvFeatures$get_ohlcv_features()}}
-\item \href{#method-clone}{\code{OhlcvFeatures$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new OhlcvFeatures object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OhlcvFeatures$new(windows = c(5, 22), quantile_divergence_window = c(50, 100))}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{windows}}{Length of window for calculating rolling versions of the indicators.}
-
-\item{\code{quantile_divergence_window}}{Window sizes from divergence from quantiles indicator.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{RollingGpd} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_ohlcv_features"></a>}}
-\if{latex}{\out{\hypertarget{method-get_ohlcv_features}{}}}
-\subsection{Method \code{get_ohlcv_features()}}{
-Function calculates basic features from OHLCV financial data
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OhlcvFeatures$get_ohlcv_features(data)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Data.table with new features.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{OhlcvFeatures$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

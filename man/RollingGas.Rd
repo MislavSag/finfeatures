@@ -3,9 +3,61 @@
 \name{RollingGas}
 \alias{RollingGas}
 \title{RollingGas Class}
+\arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of workers. Greater than 1 for parallle processing}
+
+\item{lag}{Lag variable in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
+\item{gas_dist}{Dist parametere in UniGASSpec fucntionUniGASSpec.}
+
+\item{gas_scaling}{Scaling parametere in UniGASSpec fucntionUniGASSpec.}
+
+\item{prediction_horizont}{GAS prediction horizont.}
+
+\item{df}{A data.table object with GAS results.}
+
+\item{colname_prefix}{Prefix for column names}
+
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+A new `RollingGas` object.
+
+Calculate rolling GAS features from GAS package.
+
+Calculate rolling GAS features from GAS package.
+}
 \description{
 Function calculates GAS risk values from GAS package on rolling window.
+
+Create a new RollingExuber object.
+
+Help function for Rolling GAS
+
+Function calculates GAS risk values from GAS package on rolling window.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{gas_dist}}{Dist parametere in UniGASSpec fucntionUniGASSpec.}
+
+\item{\code{gas_scaling}}{Scaling parametere in UniGASSpec fucntionUniGASSpec.}
+
+\item{\code{prediction_horizont}}{GAS prediction horizont.}
+
+\item{\code{GASSpec}}{Defined internally}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -32,144 +84,4 @@ RollingGasInit = RollingGas$new(windows = c(200, 300),
                                 prediction_horizont = 10)
 x = RollingGasInit$get_rolling_features(OhlcvInstance)
 head(x)
-}
-\section{Super class}{
-\code{\link[finfeatures:RollingGeneric]{finfeatures::RollingGeneric}} -> \code{RollingGas}
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{gas_dist}}{Dist parametere in UniGASSpec fucntionUniGASSpec.}
-
-\item{\code{gas_scaling}}{Scaling parametere in UniGASSpec fucntionUniGASSpec.}
-
-\item{\code{prediction_horizont}}{GAS prediction horizont.}
-
-\item{\code{GASSpec}}{Defined internally}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{RollingGas$new()}}
-\item \href{#method-get_series_statistics}{\code{RollingGas$get_series_statistics()}}
-\item \href{#method-rolling_function}{\code{RollingGas$rolling_function()}}
-\item \href{#method-clone}{\code{RollingGas$clone()}}
-}
-}
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="finfeatures" data-topic="RollingGeneric" data-id="get_rolling_features">}\href{../../finfeatures/html/RollingGeneric.html#method-get_rolling_features}{\code{finfeatures::RollingGeneric$get_rolling_features()}}\out{</span>}
-}
-\out{</details>}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new RollingExuber object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGas$new(
-  windows,
-  workers,
-  lag,
-  at,
-  na_pad,
-  simplify,
-  gas_dist = "sstd",
-  gas_scaling = "Identity",
-  prediction_horizont = 22
-)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{windows}}{Vector of windows that will be applied on features.}
-
-\item{\code{workers}}{Number of workers. Greater than 1 for parallle processing}
-
-\item{\code{lag}}{Lag variable in runner package.}
-
-\item{\code{at}}{Argument at in runner package.}
-
-\item{\code{na_pad}}{Argument na_pad in runner package.}
-
-\item{\code{simplify}}{Argument simplify in runner package.}
-
-\item{\code{gas_dist}}{Dist parametere in UniGASSpec fucntionUniGASSpec.}
-
-\item{\code{gas_scaling}}{Scaling parametere in UniGASSpec fucntionUniGASSpec.}
-
-\item{\code{prediction_horizont}}{GAS prediction horizont.}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{RollingGas} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-get_series_statistics"></a>}}
-\if{latex}{\out{\hypertarget{method-get_series_statistics}{}}}
-\subsection{Method \code{get_series_statistics()}}{
-Help function for Rolling GAS
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGas$get_series_statistics(df, colname_prefix = "var")}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{df}}{A data.table object with GAS results.}
-
-\item{\code{colname_prefix}}{Prefix for column names}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Calculate rolling GAS features from GAS package.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rolling_function"></a>}}
-\if{latex}{\out{\hypertarget{method-rolling_function}{}}}
-\subsection{Method \code{rolling_function()}}{
-Function calculates GAS risk values from GAS package on rolling window.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGas$rolling_function(data, window)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Calculate rolling GAS features from GAS package.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingGas$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

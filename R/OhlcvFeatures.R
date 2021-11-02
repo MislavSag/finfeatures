@@ -11,7 +11,7 @@
 #'                                    quantile_divergence_window =  c(50, 100))
 #' x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
 #' tail(x)
-OhlcvFeatures = R6Class(
+OhlcvFeatures = R6::R6Class(
   "OhlcvFeatures",
 
   public = list(

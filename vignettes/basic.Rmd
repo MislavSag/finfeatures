@@ -1,0 +1,40 @@
+---
+title: "Ohlcv features"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{basic}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup}
+library(finfeatures)
+```
+
+Data for predicting financial time series prices in general includes:
+
+1. Market data
+2. Fundamental data
+3. Alternative data.
+
+For know we only implement features generation for market data. 
+
+The simplest way to use the package is to use `Features` class, which creates all features:
+
+```{r}
+data(spy_hour)
+OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+FeaturesInstance = Features$new(OhlcvInstance,
+                                at = c(300:315, 1000:1100),
+                                lag = 1L)
+x = FeaturesInstance$get_features()
+tail(x)
+```
+

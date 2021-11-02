@@ -27,7 +27,7 @@
 #'                                 threshold = 0.01)
 #' x = RollingGasInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingGpd = R6Class(
+RollingGpd = R6::R6Class(
   "RollingGpd",
   inherit = RollingGeneric,
 

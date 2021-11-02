@@ -16,7 +16,7 @@
 #' )
 #' x = RollingBidAskInstance$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingBidAsk = R6Class(
+RollingBidAsk = R6::R6Class(
   "RollingBidAsk",
   inherit = RollingGeneric,
 

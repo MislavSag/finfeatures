@@ -47,7 +47,7 @@
 #'                                     features_set = "tsfel")
 #' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingTheft = R6Class(
+RollingTheft = R6::R6Class(
   "RollingTheft",
   inherit = RollingGeneric,
 

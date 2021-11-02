@@ -7,12 +7,12 @@
 \format{
 An object of class \code{"data.frame"}
 \describe{
-\item{datetime}{Date and time}
-\item{open}{Open price}
-\item{high}{High price}
-\item{low}{Low price}
-\item{close}{Close price}
-\item{volume}{Volumme}
+ \item{datetime}{Date and time}
+ \item{open}{Open price}
+ \item{high}{High price}
+ \item{low}{Low price}
+ \item{close}{Close price}
+ \item{volume}{Volumme}
 }
 }
 \usage{

@@ -29,7 +29,7 @@
 #'                                               h = 10)
 #' x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 #' head(x)
-RollingForecats = R6Class(
+RollingForecats = R6::R6Class(
   "RollingForecats",
   inherit = RollingGeneric,
 

@@ -3,11 +3,27 @@
 \name{Ohlcv}
 \alias{Ohlcv}
 \title{Ohlcv Class}
+\arguments{
+\item{X}{Input data.}
+
+\item{id_col}{Id column.}
+
+\item{date_col}{Date column.}
+
+\item{price}{Price column}
+
+\item{ohlcv}{Ohlcv columns}
+}
+\value{
+A new `Person` object.
+}
 \description{
 This function helps preparing data for feature calculation.
+
+Create a new Ohlcv object.
 }
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
+\section{Fields}{
+
 \describe{
 \item{\code{X}}{Input data.}
 
@@ -18,65 +34,5 @@ This function helps preparing data for feature calculation.
 \item{\code{price}}{Price column}
 
 \item{\code{ohlcv}}{Ohlcv column}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{Ohlcv$new()}}
-\item \href{#method-clone}{\code{Ohlcv$clone()}}
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new Ohlcv object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Ohlcv$new(
-  X,
-  id_col = "symbol",
-  date_col = "date",
-  price = "close",
-  ohlcv = c("open", "high", "low", "close", "volume")
-)}\if{html}{\out{</div>}}
-}
+}}
 
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{X}}{Input data.}
-
-\item{\code{id_col}}{Id column.}
-
-\item{\code{date_col}}{Date column.}
-
-\item{\code{price}}{Price column}
-
-\item{\code{ohlcv}}{Ohlcv columns}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{Person} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{Ohlcv$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
-}

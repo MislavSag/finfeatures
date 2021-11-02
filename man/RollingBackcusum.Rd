@@ -3,8 +3,18 @@
 \name{RollingBackcusum}
 \alias{RollingBackcusum}
 \title{RollingBackcusum Class}
+\arguments{
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+Calculate rolling radf features from backCUSUM package.
+}
 \description{
 Function calculates backCUSUM tests on rolling window from backCUSUM pakcage.
+
+Function calculates radf values from exuber package on rolling window.
 }
 \examples{
 data(spy_hour)
@@ -26,62 +36,4 @@ RollingBackcusumInit = RollingBackcusum$new(windows = c(200, 300),
                                             simplify = FALSE)
 x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
 head(x)
-}
-\section{Super class}{
-\code{\link[finfeatures:RollingGeneric]{finfeatures::RollingGeneric}} -> \code{RollingBackcusum}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-rolling_function}{\code{RollingBackcusum$rolling_function()}}
-\item \href{#method-clone}{\code{RollingBackcusum$clone()}}
-}
-}
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="finfeatures" data-topic="RollingGeneric" data-id="get_rolling_features">}\href{../../finfeatures/html/RollingGeneric.html#method-get_rolling_features}{\code{finfeatures::RollingGeneric$get_rolling_features()}}\out{</span>}
-\item \out{<span class="pkg-link" data-pkg="finfeatures" data-topic="RollingGeneric" data-id="initialize">}\href{../../finfeatures/html/RollingGeneric.html#method-initialize}{\code{finfeatures::RollingGeneric$initialize()}}\out{</span>}
-}
-\out{</details>}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rolling_function"></a>}}
-\if{latex}{\out{\hypertarget{method-rolling_function}{}}}
-\subsection{Method \code{rolling_function()}}{
-Function calculates radf values from exuber package on rolling window.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingBackcusum$rolling_function(data, window)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Calculate rolling radf features from backCUSUM package.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingBackcusum$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

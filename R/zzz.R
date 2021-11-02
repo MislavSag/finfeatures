@@ -1,3 +1,4 @@
+#' @title Import Packages
 #' @import data.table
 #' @import checkmate
 #' @import TTR
@@ -23,7 +24,8 @@
 #' @importFrom stats predict rnorm runif sd na.omit
 #' @importFrom future nbrOfWorkers plan
 #' @importFrom stats as.formula
-"_PACKAGE"
+NULL
+# "_PACKAGE"
 # # dummy_import = function() {
 # #   # nocov start
 # #   # this function is required to silence R CMD check

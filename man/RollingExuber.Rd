@@ -3,9 +3,43 @@
 \name{RollingExuber}
 \alias{RollingExuber}
 \title{RollingExuber Class}
+\arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of workers. Greater than 1 for parallle processing}
+
+\item{lag}{Lag variable in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
+\item{exuber_lag}{Exuber lag, see exuber package}
+
+\item{data}{X field of Ohlcv object}
+
+\item{window}{window length. This argument is given internaly}
+}
+\value{
+A new `RollingExuber` object.
+
+Calculate rolling radf features from exuber package.
+}
 \description{
 Function calculates radf values from exuber package on rolling window.
+
+Create a new RollingExuber object.
+
+Function calculates radf values from exuber package on rolling window.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{exuber_lag}}{LAg to use in exuber, see exuber package.}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -26,101 +60,4 @@ RollingExuberInit = RollingExuber$new(windows = c(200, 400),
                                       simplify = FALSE)
 x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 head(x)
-}
-\section{Super class}{
-\code{\link[finfeatures:RollingGeneric]{finfeatures::RollingGeneric}} -> \code{RollingExuber}
-}
-\section{Public fields}{
-\if{html}{\out{<div class="r6-fields">}}
-\describe{
-\item{\code{exuber_lag}}{LAg to use in exuber, see exuber package.}
-}
-\if{html}{\out{</div>}}
-}
-\section{Methods}{
-\subsection{Public methods}{
-\itemize{
-\item \href{#method-new}{\code{RollingExuber$new()}}
-\item \href{#method-rolling_function}{\code{RollingExuber$rolling_function()}}
-\item \href{#method-clone}{\code{RollingExuber$clone()}}
-}
-}
-\if{html}{
-\out{<details open ><summary>Inherited methods</summary>}
-\itemize{
-\item \out{<span class="pkg-link" data-pkg="finfeatures" data-topic="RollingGeneric" data-id="get_rolling_features">}\href{../../finfeatures/html/RollingGeneric.html#method-get_rolling_features}{\code{finfeatures::RollingGeneric$get_rolling_features()}}\out{</span>}
-}
-\out{</details>}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-new"></a>}}
-\if{latex}{\out{\hypertarget{method-new}{}}}
-\subsection{Method \code{new()}}{
-Create a new RollingExuber object.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingExuber$new(windows, workers, lag, at, na_pad, simplify, exuber_lag = 0L)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{windows}}{Vector of windows that will be applied on features.}
-
-\item{\code{workers}}{Number of workers. Greater than 1 for parallle processing}
-
-\item{\code{lag}}{Lag variable in runner package.}
-
-\item{\code{at}}{Argument at in runner package.}
-
-\item{\code{na_pad}}{Argument na_pad in runner package.}
-
-\item{\code{simplify}}{Argument simplify in runner package.}
-
-\item{\code{exuber_lag}}{Exuber lag, see exuber package}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-A new \code{RollingExuber} object.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-rolling_function"></a>}}
-\if{latex}{\out{\hypertarget{method-rolling_function}{}}}
-\subsection{Method \code{rolling_function()}}{
-Function calculates radf values from exuber package on rolling window.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingExuber$rolling_function(data, window)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{data}}{X field of Ohlcv object}
-
-\item{\code{window}}{window length. This argument is given internaly}
-}
-\if{html}{\out{</div>}}
-}
-\subsection{Returns}{
-Calculate rolling radf features from exuber package.
-}
-}
-\if{html}{\out{<hr>}}
-\if{html}{\out{<a id="method-clone"></a>}}
-\if{latex}{\out{\hypertarget{method-clone}{}}}
-\subsection{Method \code{clone()}}{
-The objects of this class are cloneable with this method.
-\subsection{Usage}{
-\if{html}{\out{<div class="r">}}\preformatted{RollingExuber$clone(deep = FALSE)}\if{html}{\out{</div>}}
-}
-
-\subsection{Arguments}{
-\if{html}{\out{<div class="arguments">}}
-\describe{
-\item{\code{deep}}{Whether to make a deep clone.}
-}
-\if{html}{\out{</div>}}
-}
-}
 }

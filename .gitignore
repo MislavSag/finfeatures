@@ -3,3 +3,4 @@
 .RData
 .Ruserdata
 help_file.R
+inst/doc

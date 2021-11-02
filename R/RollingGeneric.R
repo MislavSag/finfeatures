@@ -5,7 +5,7 @@
 #' It helps calculating rolling values of features.
 #'
 #' @export
-RollingGeneric = R6Class(
+RollingGeneric = R6::R6Class(
   "RollingGeneric",
 
   public = list(
@@ -72,7 +72,6 @@ RollingGeneric = R6Class(
 
       # start cluser if workers greater than 1
       if (self$workers > 1) {
-        print(self$workers)
         cl <- makeCluster(self$workers)
         clusterExport(cl, c("data"), envir = environment())
         clusterCall(cl, function() lapply(private$packages, require, character.only = TRUE))
