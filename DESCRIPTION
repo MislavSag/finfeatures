@@ -31,7 +31,8 @@ Imports:
     doParallel,
     mlr3misc,
     backports,
-    lgr
+    lgr,
+    cpm
 Remotes:
     github::ottosven/backCUSUM,
     github::andrewuhl/RollingWindow,

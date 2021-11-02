@@ -44,7 +44,8 @@ Ohlcv = R6::R6Class(
       self$ohlcv = assert_character(ohlcv, min.chars = 1L, min.len = 5L)
 
       # convert to data.table
-      self$X = as.data.table(self$X)
+      X_ = as.data.table(self$X)
+      self$X = copy(X_)
 
       # create  retuyrns columns
       self$X[, returns := get(price) / shift(get(price)) - 1 ]

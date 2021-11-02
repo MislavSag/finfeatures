@@ -28,12 +28,4 @@ RollingBackcusumInit = RollingBackcusum$new(windows = 200,
 x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
 head(x)
 # multiple windows and parallel
-RollingBackcusumInit = RollingBackcusum$new(windows = c(200, 300),
-                                            workers = 4L,
-                                            at = c(300:310, 500:510),
-                                            lag = 1L,
-                                            na_pad = TRUE,
-                                            simplify = FALSE)
-x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
-head(x)
 }

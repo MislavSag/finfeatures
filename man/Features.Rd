@@ -36,3 +36,12 @@ Function calculates basic features from OHLCV financial data
 \item{\code{lag}}{Argument `lag` in runner package}
 }}
 
+\examples{
+data(spy_hour)
+OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+FeaturesInstance = Features$new(OhlcvInstance,
+                                at = c(300:315, 1000:1100),
+                                lag = 1L)
+x = FeaturesInstance$get_features()
+tail(x)
+}

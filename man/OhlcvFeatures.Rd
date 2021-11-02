@@ -11,9 +11,19 @@
 \item{data}{X field of Ohlcv object}
 
 \item{window}{window length. This argument is given internaly}
+
+\item{returns}{Returns column.}
+
+\item{method}{Argument method from cpm package}
+
+\item{ARL0}{Argument ARL0 from cpm package}
+
+\item{startup}{Argument sartup from cpm package}
 }
 \value{
 A new `RollingGpd` object.
+
+Data.table with new features.
 
 Data.table with new features.
 }
@@ -23,6 +33,8 @@ Function calculates basic features from OHLCV financial data
 Create a new OhlcvFeatures object.
 
 Function calculates basic features from OHLCV financial data
+
+Helper function for calculating changepoints features
 }
 \section{Fields}{
 
@@ -34,7 +46,7 @@ Function calculates basic features from OHLCV financial data
 
 \examples{
 data(spy_hour)
-OhlcvFeaturesInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
                                    quantile_divergence_window =  c(50, 100))
 x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
