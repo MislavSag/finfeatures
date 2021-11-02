@@ -6,7 +6,7 @@
 #' @export
 #' @examples
 #' data(spy_hour)
-#' OhlcvFeaturesInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 #' RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
 #'                                    quantile_divergence_window =  c(50, 100))
 #' x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
@@ -44,8 +44,10 @@ OhlcvFeatures = R6::R6Class(
     get_ohlcv_features = function(data) {
 
       # prepare data
-      ohlcv <- data$X
+      ohlcv <- as.data.table(data$X)
       setkey(ohlcv, "symbol")
+      windows_ = self$windows
+      # windows_ = c(200, 300)
 
       # checks
       testSubset(c("symbol", "open", "high", "low", "close"), colnames(ohlcv))
@@ -58,8 +60,8 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, close_ath := (cummax(close) - close) / cummax(close), by = symbol]
 
       # returns
-      new_cols <- paste0("returns_", c(1, self$windows))
-      ohlcv[, (new_cols) := lapply(c(1, self$windows), function(w) close / shift(close, n = w) - 1), by = symbol]
+      new_cols <- paste0("returns_", c(1, windows_))
+      ohlcv[, (new_cols) := lapply(c(1, windows_), function(w) close / shift(close, n = w) - 1), by = symbol]
 
       # rolling volatility
       new_cols <- paste0("sd_", self$windows)
@@ -137,7 +139,67 @@ OhlcvFeatures = R6::R6Class(
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.25)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
+      # estimate changepoints breaks
+      for (i in c(370, 500, 1000, 5000)) {
+        # ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
+        ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
+      }
+
       return(ohlcv)
+    },
+
+    #' @description
+    #' Helper function for calculating changepoints features
+    #'
+    #' @param returns Returns column.
+    #' @param method Argument method from cpm package
+    #' @param ARL0 Argument ARL0 from cpm package
+    #' @param startup Argument sartup from cpm package
+    #'
+    #' @return Data.table with new features.
+    get_changepoints = function(returns, method, arl0) {
+      # change points roll
+      detectiontimes <- numeric()
+      changepoints <- numeric()
+      cpm <- makeChangePointModel(cpmType=method, ARL0=arl0, startup=200)
+      i <- 0
+      while (i < length(returns)) {
+
+        i <- i + 1
+
+        # if returns is na returns FALSE
+        if (is.na(returns[i])) {
+          next()
+        }
+
+        # process each observation in turn
+        cpm <- processObservation(cpm, returns[i])
+
+        # if a change has been found, log it, and reset the CPM
+        if (changeDetected(cpm) == TRUE) {
+          detectiontimes <- c(detectiontimes,i)
+
+          # the change point estimate is the maximum D_kt statistic
+          Ds <- getStatistics(cpm)
+          tau <- which.max(Ds)
+          if (length(changepoints) > 0) {
+            tau <- tau + changepoints[length(changepoints)]
+          }
+          changepoints <- c(changepoints,tau)
+
+          # reset the CPM
+          cpm <- cpmReset(cpm)
+
+          #resume monitoring from the observation following the change point
+          i <- tau
+        }
+      }
+      points <- cbind.data.frame(detectiontimes, changepoints)
+      breaks <- rep(FALSE, length(returns))
+      breaks[detectiontimes] <- TRUE
+      change <- rep(FALSE, length(returns))
+      change[changepoints] <- TRUE
+      return(cbind.data.frame(breaks, change))
     }
   )
 )
