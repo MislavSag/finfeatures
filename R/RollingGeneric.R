@@ -99,7 +99,7 @@ RollingGeneric = R6::R6Class(
 
       # stop connection
       if (self$workers > 1) {
-        stopCluster(cl)
+        # stopCluster(cl)
         stopImplicitCluster(cl)
       }
 
