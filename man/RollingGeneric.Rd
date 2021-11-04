@@ -20,6 +20,8 @@
 
 \item{window}{Rolling window lengths.}
 
+\item{price}{Prcie column in Ohlcv}
+
 \item{Ohlcv}{Ohlcv object}
 }
 \value{

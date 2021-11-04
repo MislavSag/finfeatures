@@ -31,7 +31,7 @@ Ohlcv = R6::R6Class(
     #' @param id_col Id column.
     #' @param date_col Date column.
     #' @param price Price column
-    #' @param ohlcv Ohlcv columns
+    #' @param ohlcv (optional) Ohlcv columns
     #' @return A new `Person` object.
     initialize = function(X, id_col = "symbol", date_col = "date", price = "close",
                           ohlcv = c("open", "high", "low", "close", "volume")) {
@@ -41,7 +41,9 @@ Ohlcv = R6::R6Class(
       self$id_col = assert_string(id_col, min.chars = 1L)
       self$date_col = assert_string(date_col, min.chars = 1L)
       self$price = assert_string(price, min.chars = 1L)
-      self$ohlcv = assert_character(ohlcv, min.chars = 1L, min.len = 5L)
+      if (!is.null(ohlcv)) {
+        self$ohlcv = assert_character(ohlcv, min.chars = 1L, min.len = 5L)
+      }
 
       # convert to data.table
       X_ = as.data.table(self$X)
@@ -51,7 +53,11 @@ Ohlcv = R6::R6Class(
       self$X[, returns := get(price) / shift(get(price)) - 1 ]
 
       # change columns names
-      setnames(self$X, c(id_col, date_col, ohlcv), c("symbol", "date", "open", "high", "low", "close", "volume"))
+      if (is.null(ohlcv)) {
+        setnames(self$X, c(id_col, date_col), c("symbol", "date"))
+      } else {
+        setnames(self$X, c(id_col, date_col, ohlcv), c("symbol", "date", "open", "high", "low", "close", "volume"))
+      }
 
       # check price
       assert_double(self$X[, get(price)], lower = 1e-005)

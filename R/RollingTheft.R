@@ -5,18 +5,18 @@
 #'
 #' @export
 #' @examples
-#' data(spy_hour)
-#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' # catch22 features
-#' RollingTheftInit = RollingTheft$new(windows = 200,
-#'                                     workers = 1L,
-#'                                     at = c(300, 500),
-#'                                     lag = 0L,
-#'                                     na_pad = TRUE,
-#'                                     simplify = FALSE,
-#'                                     features_set = "catch22")
-#' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
-#' head(x)
+# data(spy_hour)
+# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+# # catch22 features
+# RollingTheftInit = RollingTheft$new(windows = 200,
+#                                     workers = 1L,
+#                                     at = c(300, 500),
+#                                     lag = 0L,
+#                                     na_pad = TRUE,
+#                                     simplify = FALSE,
+#                                     features_set = "catch22")
+# x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+# head(x)
 #' # feasts features
 #' RollingTheftInit = RollingTheft$new(windows = 200,
 #'                                     workers = 1L,
@@ -91,9 +91,10 @@ RollingTheft = R6::R6Class(
     #'
     #' @param data X field of Ohlcv object
     #' @param window window length. This argument is given internaly
+    #' @param price Prcie column in Ohlcv
     #'
     #' @return Calculate rolling radf features from theft package.
-    rolling_function = function(data, window) {
+    rolling_function = function(data, window, price) {
 
       # check if there is enough data
       if (length(unique(data$symbol)) > 1) {
@@ -102,7 +103,7 @@ RollingTheft = R6::R6Class(
       }
 
       # calculate features
-      y <- as.data.table(calculate_features(data, "symbol", "date", "close", feature_set = self$features_set, tsfresh_cleanup = TRUE))
+      y <- as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE))
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)

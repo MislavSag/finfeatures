@@ -63,9 +63,10 @@ RollingExuber = R6::R6Class(
     #'
     #' @param data X field of Ohlcv object
     #' @param window window length. This argument is given internaly
+    #' @param price Prcie column in Ohlcv
     #'
     #' @return Calculate rolling radf features from exuber package.
-    rolling_function = function(data, window) {
+    rolling_function = function(data, window, price) {
 
       # check if there is enough data
       if (length(unique(data$symbol)) > 1) {
@@ -74,7 +75,7 @@ RollingExuber = R6::R6Class(
       }
 
       # calculate radf valuies and save
-      y <- tryCatch(radf(data$close, lag = self$exuber_lag, minw = psy_minw(window)), error = function(e) NA)
+      y <- tryCatch(radf(data[, get(price)], lag = self$exuber_lag, minw = psy_minw(window)), error = function(e) NA)
       if (all(is.na(y))) {
         return(NULL)
       } else {

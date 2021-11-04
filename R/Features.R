@@ -74,7 +74,7 @@ Features = R6::R6Class(
       # BidAsk features
       print("Calculate BidAsk features.")
       RollingBidAskInstance <- RollingBidAsk$new(windows = c(5, 22),
-                                                 workers = 8L,
+                                                 workers = 12L,
                                                  at = at_,
                                                  lag = lag_,
                                                  na_pad = TRUE,
@@ -84,8 +84,8 @@ Features = R6::R6Class(
 
       # BackCUSUM features
       print("Calculate BackCUSUM features.")
-      RollingBackcusumInit = RollingBackcusum$new(windows = c(22, 66),
-                                                  workers = 8L,
+      RollingBackcusumInit = RollingBackcusum$new(windows = c(100),
+                                                  workers = 12L,
                                                   at = at_,
                                                   lag = lag_,
                                                   na_pad = TRUE,
@@ -95,7 +95,7 @@ Features = R6::R6Class(
       # Exuber features
       print("Calculate Exuber features.")
       RollingExuberInit = RollingExuber$new(windows = c(100, 300, 600),
-                                            workers = 1L,
+                                            workers = 12L,
                                             at = at_,
                                             lag = lag_,
                                             na_pad = TRUE,
@@ -105,8 +105,8 @@ Features = R6::R6Class(
 
       # Forecast Features
       print("Calculate AutoArima features.")
-      RollingForecatsInstance = RollingForecats$new(windows = c(300),
-                                                    workers = 8L,
+      RollingForecatsInstance = RollingForecats$new(windows = c(252),
+                                                    workers = 12L,
                                                     lag = lag_,
                                                     at = at_,
                                                     na_pad = TRUE,
@@ -115,8 +115,8 @@ Features = R6::R6Class(
                                                     h = 22)
       RollingForecatsAutoarimaFeatures = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
       print("Calculate Nnetar features.")
-      RollingForecatsInstance = RollingForecats$new(windows = c(300),
-                                                    workers = 8L,
+      RollingForecatsInstance = RollingForecats$new(windows = c(252),
+                                                    workers = 12L,
                                                     lag = lag_,
                                                     at = at_,
                                                     na_pad = TRUE,
@@ -128,7 +128,7 @@ Features = R6::R6Class(
       # GAS
       print("Calculate GAS features.")
       RollingGasInit = RollingGas$new(windows = c(100),
-                                      workers = 8L,
+                                      workers = 12L,
                                       at = at_,
                                       lag = lag_,
                                       na_pad = TRUE,
@@ -140,8 +140,8 @@ Features = R6::R6Class(
 
       # Gpd features
       print("Calculate Gpd features.")
-      RollingGpdInit = RollingGpd$new(windows = c(100, 200),
-                                      workers = 8L,
+      RollingGpdInit = RollingGpd$new(windows = c(22 * 6),
+                                      workers = 12L,
                                       at = at_,
                                       lag = lag_,
                                       na_pad = TRUE,
@@ -152,7 +152,7 @@ Features = R6::R6Class(
       # theft catch22 features
       print("Calculate Catch22 features.")
       RollingTheftInit = RollingTheft$new(windows = c(22, 22 * 3, 22 * 12),
-                                          workers = 8L,
+                                          workers = 12L,
                                           at = at_,
                                           lag = lag_,
                                           na_pad = TRUE,
@@ -163,7 +163,7 @@ Features = R6::R6Class(
       # theft feasts features
       print("Calculate feasts features.")
       RollingTheftInit = RollingTheft$new(windows = c(22, 22 * 3, 22 * 12),
-                                          workers = 8L,
+                                          workers = 12L,
                                           at = at_,
                                           lag = lag_,
                                           na_pad = TRUE,
@@ -174,7 +174,7 @@ Features = R6::R6Class(
       # theft tsfeatures features
       print("Calculate Tsfeatures features.")
       RollingTheftInit = RollingTheft$new(windows = c(22 * 3, 22 * 12),
-                                          workers = 1L,
+                                          workers = 12L,
                                           at = at_,
                                           lag = lag_,
                                           na_pad = TRUE,

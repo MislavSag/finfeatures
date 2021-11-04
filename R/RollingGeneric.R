@@ -53,9 +53,10 @@ RollingGeneric = R6::R6Class(
     #'
     #' @param x Ohlcv object.
     #' @param window Rolling window lengths.
+    #' @param price Prcie column in Ohlcv
     #'
     #' @return Depending on used classes for clalculating features. It returns df.
-    rolling_function = function(x, window) {
+    rolling_function = function(x, window, price_col) {
       NULL
     },
 
@@ -73,6 +74,7 @@ RollingGeneric = R6::R6Class(
       # start cluser if workers greater than 1
       if (self$workers > 1) {
         cl <- makeCluster(self$workers)
+        registerDoParallel(cl)
         clusterExport(cl, c("data"), envir = environment())
         clusterCall(cl, function() lapply(private$packages, require, character.only = TRUE))
       } else {
@@ -84,7 +86,7 @@ RollingGeneric = R6::R6Class(
       for (i in 1:length(self$windows)) {
         rolling_features = runner(
           x = data,
-          f = function(x) self$rolling_function(x, self$windows[i]),
+          f = function(x) self$rolling_function(x, self$windows[i], Ohlcv$price),
           k = self$windows[i],
           lag = self$lag,
           at = self$at,
@@ -98,6 +100,7 @@ RollingGeneric = R6::R6Class(
       # stop connection
       if (self$workers > 1) {
         stopCluster(cl)
+        stopImplicitCluster(cl)
       }
 
       # merge all results
