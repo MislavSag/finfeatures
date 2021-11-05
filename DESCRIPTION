@@ -34,16 +34,18 @@ Imports:
     lgr,
     cpm
 Remotes:
-    github::ottosven/backCUSUM,
-    github::andrewuhl/RollingWindow,
-    github::hendersontrent/theft
+    ottosven/backCUSUM,
+    andrewuhl/RollingWindow,
+    hendersontrent/theft
 Suggests:
     roxygen2,
     devtools,
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 7.1.2
 VignetteBuilder: knitr
 Roxygen: list(r6 = FALSE)
+Config/testthat/edition: 3
