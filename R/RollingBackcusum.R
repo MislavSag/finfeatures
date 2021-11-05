@@ -35,9 +35,10 @@ RollingBackcusum = R6::R6Class(
     #'
     #' @param data X field of Ohlcv object
     #' @param window window length. This argument is given internaly
+    #' @param price Prcie column in Ohlcv
     #'
     #' @return Calculate rolling radf features from backCUSUM package.
-    rolling_function = function(data, window) {
+    rolling_function = function(data, window, price) {
 
       # check if there is enough data
       if (length(unique(data$symbol)) > 1) {

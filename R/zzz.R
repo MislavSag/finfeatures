@@ -1,4 +1,3 @@
-#' @title Import Packages
 #' @import data.table
 #' @import checkmate
 #' @import TTR
@@ -20,13 +19,12 @@
 #' @importFrom QuantTools roll_percent_rank sma ema rsi
 #' @importFrom bidask spread
 #' @importFrom parallel makeCluster clusterExport clusterCall stopCluster
-#' @importFrom exuber radf psy_minw augment tidy index
+#' @importFrom exuber radf psy_minw augment tidy
 #' @importFrom utils data head tail getFromNamespace
 #' @importFrom stats predict rnorm runif sd na.omit
 #' @importFrom future nbrOfWorkers plan
 #' @importFrom stats as.formula
-NULL
-# "_PACKAGE"
+"_PACKAGE"
 # # dummy_import = function() {
 # #   # nocov start
 # #   # this function is required to silence R CMD check

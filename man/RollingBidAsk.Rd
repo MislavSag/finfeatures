@@ -21,6 +21,8 @@
 \item{data}{X field of Ohlcv object}
 
 \item{window}{window length. This argument is given internaly}
+
+\item{price}{Prcie column in Ohlcv}
 }
 \value{
 A new `RollingBidAsk` object.

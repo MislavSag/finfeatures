@@ -43,18 +43,6 @@ Function calculates catch 22 features on rolling window.
 }}
 
 \examples{
-data(spy_hour)
-OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-# catch22 features
-RollingTheftInit = RollingTheft$new(windows = 200,
-                                    workers = 1L,
-                                    at = c(300, 500),
-                                    lag = 0L,
-                                    na_pad = TRUE,
-                                    simplify = FALSE,
-                                    features_set = "catch22")
-x = RollingTheftInit$get_rolling_features(OhlcvInstance)
-head(x)
 # feasts features
 RollingTheftInit = RollingTheft$new(windows = 200,
                                     workers = 1L,

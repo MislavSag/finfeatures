@@ -12,7 +12,7 @@
 
 \item{price}{Price column}
 
-\item{ohlcv}{Ohlcv columns}
+\item{ohlcv}{(optional) Ohlcv columns}
 }
 \value{
 A new `Person` object.
