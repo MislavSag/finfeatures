@@ -1,4 +1,4 @@
 library(testthat)
 library(finfeatures)
 
-test_check("finfeatures")
+# test_check("finfeatures")

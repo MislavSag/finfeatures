@@ -7,8 +7,7 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
-#'                                    quantile_divergence_window =  c(50, 100))
+#' RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300), quantile_divergence_window =  c(50, 100))
 #' x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
 #' tail(x)
 OhlcvFeatures = R6::R6Class(
@@ -44,6 +43,7 @@ OhlcvFeatures = R6::R6Class(
     get_ohlcv_features = function(data) {
 
       # prepare data
+      # data <- OhlcvInstance
       ohlcv <- as.data.table(data$X)
       setkey(ohlcv, "symbol")
       windows_ = self$windows
@@ -59,17 +59,23 @@ OhlcvFeatures = R6::R6Class(
       # close ATH
       ohlcv[, close_ath := (cummax(close) - close) / cummax(close), by = symbol]
 
+      # whole number discrepancy
+      ohlcv$pretty_1 <- sapply(ohlcv$close, function(x) pretty(x)[1])
+      ohlcv$pretty_2 <- sapply(ohlcv$close, function(x) pretty(x)[2])
+      ohlcv[, close_round_div_down := (close - pretty_1) / pretty_1]
+      ohlcv[, close_round_div_up := (close - pretty_2) / pretty_2]
+      ohlcv[, `:=`(pretty_1 = NULL, pretty_2 = NULL)]
+
       # returns
       new_cols <- paste0("returns_", c(1, windows_))
       ohlcv[, (new_cols) := lapply(c(1, windows_), function(w) close / shift(close, n = w) - 1), by = symbol]
 
       # rolling volatility
-      new_cols <- paste0("sd_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
+      new_cols <- paste0("sd_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
 
       # Close-to-Close Volatility
-      new_cols <- paste0("sd_close_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) volatility(close, n = w, calc = "close")), by = symbol]
+      new_cols <- paste0("sd_close_", windows_)
       new_cols <- paste0("sd_parkinson_", self$windows)
       ohlcv[, (new_cols) := lapply(self$windows, function(w) volatility(cbind(open, high, low, close), n = w, calc = "parkinson")),
             by = symbol]
@@ -79,49 +85,62 @@ OhlcvFeatures = R6::R6Class(
       new_cols <- paste0("sd_gk.yz_", self$windows)
       ohlcv[, (new_cols) := lapply(self$windows, function(w) volatility(cbind(open, high, low, close), n = w, calc = "gk.yz")),
             by = symbol]
-      new_cols <- paste0("sd_yang.zhang_", self$windows)
+      new_cols <- paste0("sd_yang.zhang_", windows_)
       ohlcv[, (new_cols) := lapply(self$windows, function(w) volatility(cbind(open, high, low, close), n = w, calc = "yang.zhang")),
             by = symbol]
 
       # rolling skewness
-      new_cols <- paste0("skew_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) as.vector(RollingSkew(returns_1, window = w, na_method = "ignore"))), by = symbol]
+      new_cols <- paste0("skew_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSkew(returns_1, window = w, na_method = "ignore"))), by = symbol]
 
       # rolling kurtosis
       new_cols <- paste0("kurtosis_", self$windows)
       ohlcv[, (new_cols) := lapply(self$windows, function(w) as.vector(RollingKurt(returns_1, window = w, na_method = "ignore"))), by = symbol]
 
       # rolling TA indicators
-      new_cols <- paste0("rsi_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) rsi(close, n = w)), by = symbol]
-      new_cols <- expand.grid("bbands", c("dn", "mavg", "up", "pctB"), self$windows)
+      # RSI
+      new_cols <- paste0("rsi_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) rsi(close, n = w)), by = symbol]
+      # BBANDS
+      new_cols <- expand.grid("bbands", c("dn", "mavg", "up", "pctB"), windows_)
       new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      ohlcv <- cbind(ohlcv,
-                     setNames(do.call(cbind.data.frame, lapply(self$windows, function(w) BBands(ohlcv$close, n = w))), new_cols))
-      new_cols <- paste0("percent_rank_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) roll_percent_rank(close, n = w)), by = symbol]
+      ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(BBands(close, n = w)))), by = symbol]
+      new_cols_change <- new_cols[grep("up|mavg|dn", new_cols)]
+      ohlcv[, (new_cols_change) := lapply(.SD, function(x) (close - x) / x), .SDcols = new_cols_change]
+      # percent rand
+      new_cols <- paste0("percent_rank_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) QuantTools::roll_percent_rank(close, n = w)), by = symbol]
 
       # trading rules
-      ohlcv[, close_above_sma200 := as.integer(close > sma(close, n = 200)), by = symbol]
-      ohlcv[, ema_above_sma200 := as.integer(ema(close, n = 50) > sma(close, n = 200)), by = symbol]
-      ohlcv[, close_above_vwap_20 := as.integer(close > TTR::VWAP(close, volume, n = 20)), by = symbol]
+      ohlcv[, close_above_sma200 := (close - sma(close, n = 200)) / sma(close, n = 200), by = symbol]
+      ohlcv[, close_above_sma100 := (close - sma(close, n = 100)) / sma(close, n = 100), by = symbol]
+      ohlcv[, close_above_sma50 := (close - sma(close, n = 50)) / sma(close, n = 50), by = symbol]
+      ohlcv[, close_above_sma22 := (close - sma(close, n = 22)) / sma(close, n = 22), by = symbol]
+      ohlcv[, ema_above_sma200 := (ema(close, n = 50) - sma(close, n = 200)) / sma(close, n = 200), by = symbol]
+      ohlcv[, ema_above_sma100 := (ema(close, n = 50) - sma(close, n = 100)) / sma(close, n = 100), by = symbol]
+      ohlcv[, close_above_vwap_20 := (close - TTR::VWAP(close, volume, n = 20)) / TTR::VWAP(close, volume, n = 20), by = symbol]
+      ohlcv[, close_above_vwap_50 := (close - TTR::VWAP(close, volume, n = 50)) / TTR::VWAP(close, volume, n = 50), by = symbol]
 
       # rolling volume
-      new_cols <- paste0("volume_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) frollmean(volume / 1000, n = w, na.rm = TRUE)), by = symbol]
-      new_cols <- paste0("volume_rate_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) volume / shift(volume, n = w) - 1), by = symbol]
+      # new_cols <- paste0("volume_", windows_)
+      # ohlcv[, (new_cols) := lapply(windows_, function(w) frollmean(volume / 1000, n = w, na.rm = TRUE)), by = symbol]
+      new_cols <- paste0("volume_rate_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
-      # rolling linear regression model: y = 1 + y_t-1 + e
-      new_cols <- paste0("lm_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) roll::roll_lm(log(close), date, width = w))$coefficients[2], by = symbol]
-      new_cols <- paste0("r2_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) roll::roll_lm(log(close), date, width = w))$r.squared, by = symbol]
+      # rolling linear regression model: y = 1 + date + e NOT THAT GOOD AFTER ALL ?
+      # new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
+      # new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      # ohlcv[, (new_cols) := do.call(cbind,
+      #                               lapply(windows_,
+      #                                      function(w) as.data.frame(as.data.table(roll::roll_lm(log(close), date, width = w))))),
+      #       by = symbol]
+      # new_cols_change <- new_cols[grep("cf|std", new_cols)]
+      # ohlcv[, (new_cols_change) := lapply(.SD, function(x) x / 100000), .SDcols = new_cols_change]
 
       # rolling sharpe ratio
-      new_cols <- paste0("sharpe_", self$windows)
-      ohlcv[, (new_cols) := lapply(self$windows, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
-                                                                                     na_method = "ignore"))), by = symbol]
+      new_cols <- paste0("sharpe_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
+                                                                                 na_method = "ignore"))), by = symbol]
 
       # rolling quantile substraction
       generate_quantile_divergence <- function(ohlcv, p = 0.99, window_sizes = self$quantile_divergence_window) {

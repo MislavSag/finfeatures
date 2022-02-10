@@ -29,13 +29,24 @@
 #'                                               h = 10)
 #' x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 #' head(x)
+#' # ets
+# RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
+#                                               workers = 2L,
+#                                               lag = 1L,
+#                                               at = c(100:110, 200:210),
+#                                               na_pad = TRUE,
+#                                               simplify = FALSE,
+#                                               forecast_type = "ets",
+#                                               h = 10)
+# x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
+# head(x)
 RollingForecats = R6::R6Class(
   "RollingForecats",
   inherit = RollingGeneric,
 
   public = list(
 
-    #' @field forecast_type Type of time series forecasts.
+    #' @field forecast_type Type of forecast.
     forecast_type = NULL,
 
     #' @field h Forecast horizont.
@@ -45,8 +56,8 @@ RollingForecats = R6::R6Class(
     #' Create a new RollingForecats object.
     #'
     #' @param windows Vector of windows that will be applied on features.
-    #' @param workers Number of workers. Greater than 1 for parallle processing
-    #' @param lag Lag variable in runner package.
+#'                                               h = 10)
+#'                                               h = 10)
     #' @param at Argument at in runner package.
     #' @param na_pad Argument na_pad in runner package.
     #' @param simplify Argument simplify in runner package.
@@ -54,7 +65,7 @@ RollingForecats = R6::R6Class(
     #' @param h Forecast horizont.
     #'
     #' @return A new `RollingForecats` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify, forecast_type = c("autoarima", "nnetar"), h = 10) {
+    initialize = function(windows, workers, lag, at, na_pad, simplify, forecast_type = c("autoarima", "nnetar", "ets"), h = 10) {
       self$forecast_type = forecast_type
       self$h = h
 
@@ -93,6 +104,11 @@ RollingForecats = R6::R6Class(
         y <- nnetar(na.omit(data$returns))
         y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
         cols_prefix <- "nnetar_"
+      } else if (self$forecast_type == "ets") {
+        y <- ets(na.omit(data[, get(price)]))
+        y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
+        y <- y - tail(data[, get(price)], 1)
+        cols_prefix <- "ets_"
       }
 
       # clean arima forecasts

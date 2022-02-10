@@ -4,11 +4,9 @@
 \alias{RollingForecats}
 \title{RollingForecats Class}
 \arguments{
-\item{windows}{Vector of windows that will be applied on features.}
-
-\item{workers}{Number of workers. Greater than 1 for parallle processing}
-
-\item{lag}{Lag variable in runner package.}
+\item{windows}{Vector of windows that will be applied on features.
+h = 10)
+h = 10)}
 
 \item{at}{Argument at in runner package.}
 
@@ -41,7 +39,7 @@ Function calculates forecastas based on auto.arima and nnetar functions from for
 \section{Fields}{
 
 \describe{
-\item{\code{forecast_type}}{Type of time series forecasts.}
+\item{\code{forecast_type}}{Type of forecast.}
 
 \item{\code{h}}{Forecast horizont.}
 }}
@@ -71,4 +69,5 @@ RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
                                               h = 10)
 x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 head(x)
+# ets
 }

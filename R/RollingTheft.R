@@ -5,46 +5,16 @@
 #'
 #' @export
 #' @examples
-# data(spy_hour)
-# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-# # catch22 features
-# RollingTheftInit = RollingTheft$new(windows = 200,
-#                                     workers = 1L,
-#                                     at = c(300, 500),
-#                                     lag = 0L,
-#                                     na_pad = TRUE,
-#                                     simplify = FALSE,
-#                                     features_set = "catch22")
-# x = RollingTheftInit$get_rolling_features(OhlcvInstance)
-# head(x)
-#' # feasts features
+#' data(spy_hour)
+#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+#' # catch22 features
 #' RollingTheftInit = RollingTheft$new(windows = 200,
 #'                                     workers = 1L,
 #'                                     at = c(300, 500),
 #'                                     lag = 0L,
 #'                                     na_pad = TRUE,
 #'                                     simplify = FALSE,
-#'                                     features_set = "feasts")
-#' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
-#' head(x)
-#' # tsfeatures
-#' RollingTheftInit = RollingTheft$new(windows = 200,
-#'                                     workers = 1L,
-#'                                     at = c(300, 500),
-#'                                     lag = 0L,
-#'                                     na_pad = TRUE,
-#'                                     simplify = FALSE,
-#'                                     features_set = "tsfeatures")
-#' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
-#' head(x)
-#' # tsfel features
-#' RollingTheftInit = RollingTheft$new(windows = 200,
-#'                                     workers = 1L,
-#'                                     at = c(300, 500),
-#'                                     lag = 0L,
-#'                                     na_pad = TRUE,
-#'                                     simplify = FALSE,
-#'                                     features_set = "tsfel")
+#'                                     features_set = "catch22")
 #' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingTheft = R6::R6Class(
@@ -82,7 +52,13 @@ RollingTheft = R6::R6Class(
       )
 
       # set python path
-      reticulate::use_python("C:/ProgramData/Anaconda3/envs/theft/python.exe", required = TRUE)
+      # library(reticulate)
+      # reticulate::use_python("C:/ProgramData/Anaconda3/envs/mlfinlabenv/python.exe", required = TRUE)
+      # mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
+      # pd = reticulate::import("pandas", convert = FALSE)
+      # builtins = import_builtins(convert = FALSE)
+      # main = import_main(convert = FALSE)
+
 
     },
 
@@ -96,6 +72,9 @@ RollingTheft = R6::R6Class(
     #' @return Calculate rolling radf features from theft package.
     rolling_function = function(data, window, price) {
 
+      # debugging
+      # y <<- data
+
       # check if there is enough data
       if (length(unique(data$symbol)) > 1) {
         print(paste0("not enough data for symbol ", data$symbol[1]))
@@ -103,7 +82,17 @@ RollingTheft = R6::R6Class(
       }
 
       # calculate features
+      # print(length(data))
+      # print(nrow(data))
+      # print(head(data))
+      # print(data$close)
+      print(dput(data))
       y <- as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE))
+      # y <- tryCatch(
+      #   as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE)),
+      #   error = function(e) NULL
+      # )
+      # if (is.null(y)) print(data$close)
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)

@@ -30,11 +30,11 @@ The simplest way to use the package is to use `Features` class, which creates al
 
 ```{r}
 data(spy_hour)
-OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-FeaturesInstance = Features$new(OhlcvInstance,
-                                at = c(300:315, 1000:1100),
-                                lag = 1L)
-x = FeaturesInstance$get_features()
-tail(x)
+# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+# FeaturesInstance = Features$new(OhlcvInstance,
+#                                 at = c(300:315, 1000:1100),
+#                                 lag = 1L)
+# x = FeaturesInstance$get_features()
+# tail(x)
 ```
 

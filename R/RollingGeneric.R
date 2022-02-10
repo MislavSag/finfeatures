@@ -73,10 +73,10 @@ RollingGeneric = R6::R6Class(
 
       # start cluser if workers greater than 1
       if (self$workers > 1) {
-        cl <- makeCluster(self$workers)
-        registerDoParallel(cl)
-        clusterExport(cl, c("data"), envir = environment())
-        clusterCall(cl, function() lapply(private$packages, require, character.only = TRUE))
+        cl <- parallel::makeCluster(self$workers)
+        # registerDoParallel(cl)
+        parallel::clusterExport(cl, c("data"), envir = environment())
+        parallel::clusterCall(cl, function() lapply(private$packages, require, character.only = TRUE))
       } else {
         cl <- NULL
       }
@@ -94,13 +94,13 @@ RollingGeneric = R6::R6Class(
           simplify = self$simplify,
           cl = cl
         )
-        data_list[[i]] <- rbindlist(rolling_features[lengths(rolling_features) > 1L])
+        data_list[[i]] <- rbindlist(rolling_features[lengths(rolling_features) > 1L], fill = TRUE)
       }
 
       # stop connection
       if (self$workers > 1) {
-        # stopCluster(cl)
-        stopImplicitCluster()
+        parallel::stopCluster(cl)
+        # stopImplicitCluster()
       }
 
       # merge all results
@@ -111,6 +111,6 @@ RollingGeneric = R6::R6Class(
 
   private = list(
 
-    packages = c("data.table", "exuber", "backcCUSUM")
+    packages = c("data.table", "exuber", "backcCUSUM", "quarks")
   )
 )

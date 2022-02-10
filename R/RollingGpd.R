@@ -16,16 +16,14 @@
 #'                                 threshold = 0.01)
 #' x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-#' # OHLCV features
-#' # parallel and multiple windows
-#' RollingGasInit = RollingGpd$new(windows = c(200, 300),
-#'                                 workers = 4L,
+#' RollingGpdInit = RollingGpd$new(windows = 200,
+#'                                 workers = 2L,
 #'                                 at = c(300:310, 500:510),
-#'                                 lag = 1L,
+#'                                 lag = 0L,
 #'                                 na_pad = TRUE,
 #'                                 simplify = FALSE,
 #'                                 threshold = 0.01)
-#' x = RollingGasInit$get_rolling_features(OhlcvInstance)
+#' x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingGpd = R6::R6Class(
   "RollingGpd",

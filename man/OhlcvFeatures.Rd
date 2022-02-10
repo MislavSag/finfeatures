@@ -47,8 +47,7 @@ Helper function for calculating changepoints features
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300),
-                                   quantile_divergence_window =  c(50, 100))
+RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300), quantile_divergence_window =  c(50, 100))
 x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
 tail(x)
 }

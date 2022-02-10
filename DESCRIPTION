@@ -18,11 +18,9 @@ Imports:
     roll,
     QuantTools,
     forecast,
-    doParallel,
     runner,
     exuber,
     zoo,
-    parallel,
     GAS,
     ptsuite,
     reticulate,
@@ -32,7 +30,14 @@ Imports:
     mlr3misc,
     backports,
     lgr,
-    cpm
+    cpm,
+    quarks,
+    tvgarch,
+    backCUSUM,
+    future,
+    theft,
+    RollingWindow,
+    tsfeatures
 Remotes:
     ottosven/backCUSUM,
     andrewuhl/RollingWindow,

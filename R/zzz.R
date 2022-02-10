@@ -9,11 +9,13 @@
 #' @import GAS
 #' @import ptsuite
 #' @import reticulate
-#' @import doParallel
 #' @import backCUSUM
 #' @import RollingWindow
 #' @import mlr3misc
 #' @import cpm
+#' @import quarks
+#' @import tvgarch
+#' @import tsfeatures
 #' @importFrom R6 R6Class is.R6
 #' @importFrom roll roll_sd roll_lm roll_quantile
 #' @importFrom QuantTools roll_percent_rank sma ema rsi
@@ -25,30 +27,3 @@
 #' @importFrom future nbrOfWorkers plan
 #' @importFrom stats as.formula
 "_PACKAGE"
-# # dummy_import = function() {
-# #   # nocov start
-# #   # this function is required to silence R CMD check
-# #   mlbench::mlbench.xor
-# #   mlr3measures::mse
-# # } # nocov end
-#
-#
-# .onLoad = function(libname, pkgname) {
-#   # nocov start
-#   backports::import(pkgname)
-#
-#   # setup logger
-#   lg = lgr::get_logger(pkgname)
-#   assign("lg", lg, envir = parent.env(environment()))
-#   f = function(event) {
-#     event$msg = paste0("[mlr3] ", event$msg)
-#     TRUE
-#   }
-#   # lg$set_filters(list(f))
-#   # if (Sys.getenv("IN_PKGDOWN") == "true") {
-#   #   lg$set_threshold("warn")
-#   # }
-#
-# } # nocov end
-#
-# mlr3misc::leanify_package()

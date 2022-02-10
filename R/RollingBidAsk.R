@@ -80,9 +80,9 @@ RollingBidAsk = R6::R6Class(
       } else {
         result <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], as.data.table(y))
         colnames(result)[3:ncol(result)] <- paste("bidask", window, colnames(result)[3:ncol(result)], sep = "_")
+        result[, result[, colnames(result)[grep("index", colnames(result))]]] <- NULL
         return(as.data.table(result))
       }
-
     }
   )
 )

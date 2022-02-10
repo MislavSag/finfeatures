@@ -6,14 +6,6 @@
 #' @importFrom R6 R6Class is.R6
 #'
 #' @export
-#' @examples
-#' data(spy_hour)
-#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' FeaturesInstance = Features$new(OhlcvInstance,
-#'                                 at = c(300:315, 1000:1100),
-#'                                 lag = 1L)
-#' x = FeaturesInstance$get_features()
-#' tail(x)
 Features = R6::R6Class(
   "Features",
 
@@ -36,7 +28,7 @@ Features = R6::R6Class(
     #' @param lag Argument `lag` in runner package
     #'
     #' @return A new `Features` object.
-    initialize = function(ohlcv_object, at, lag = 1L) {
+    initialize = function(ohlcv_object, at, lag = 0L) {
       self$ohlcv_object = ohlcv_object
       self$at = at
       self$lag = lag
@@ -64,17 +56,20 @@ Features = R6::R6Class(
       # lag_ <- 1L
       ######### TEST
 
+      OhlcvInstance = Ohlcv$new(prices)
+      lag_ = 0
+
       # Features from OHLLCV
       print("Calculate Ohlcv features.")
       OhlcvFeaturesInit = OhlcvFeatures$new(windows = c(5, 22, 22 * 3, 22 * 6, 22 * 12),
                                             quantile_divergence_window =  c(22, 22*3, 22*12))
       OhlcvFeaturesSet = OhlcvFeaturesInit$get_ohlcv_features(OhlcvInstance)
-      OhlcvFeaturesSet <- OhlcvFeaturesSet[at_ - lag_] ## HERE !!!!!!!!!!
+      OhlcvFeaturesSet_sample <- OhlcvFeaturesSet[at_ - lag_]
 
       # BidAsk features
       print("Calculate BidAsk features.")
       RollingBidAskInstance <- RollingBidAsk$new(windows = c(5, 22),
-                                                 workers = 12L,
+                                                 workers = 10L,
                                                  at = at_,
                                                  lag = lag_,
                                                  na_pad = TRUE,
@@ -84,7 +79,7 @@ Features = R6::R6Class(
 
       # BackCUSUM features
       print("Calculate BackCUSUM features.")
-      RollingBackcusumInit = RollingBackcusum$new(windows = c(100),
+      RollingBackcusumInit = RollingBackcusum$new(windows = c(22 * 3),
                                                   workers = 12L,
                                                   at = at_,
                                                   lag = lag_,
@@ -94,8 +89,8 @@ Features = R6::R6Class(
 
       # Exuber features
       print("Calculate Exuber features.")
-      RollingExuberInit = RollingExuber$new(windows = c(100, 300, 600),
-                                            workers = 12L,
+      RollingExuberInit = RollingExuber$new(windows = c(300, 600),
+                                            workers = 8L,
                                             at = at_,
                                             lag = lag_,
                                             na_pad = TRUE,
@@ -171,20 +166,21 @@ Features = R6::R6Class(
                                           features_set = "feasts")
       RollingTheftFeastsFatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
 
-      # theft tsfeatures features
-      print("Calculate Tsfeatures features.")
-      RollingTheftInit = RollingTheft$new(windows = c(22 * 3, 22 * 12),
-                                          workers = 12L,
-                                          at = at_,
-                                          lag = lag_,
-                                          na_pad = TRUE,
-                                          simplify = FALSE,
-                                          features_set = "tsfeatures")
-      RollingTheftTsfeaturesFeatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
+      # theft tsfeatures features DOESNT WORK FOR SOME REASON
+      # print("Calculate Tsfeatures features.")
+      # RollingTheftInit = RollingTheft$new(windows = c(22 * 12),
+      #                                     workers = 4L,
+      #                                     at = at_,
+      #                                     lag = lag_,
+      #                                     na_pad = TRUE,
+      #                                     simplify = FALSE,
+      #                                     features_set = "tsfeatures")
+      # RollingTheftTsfeaturesFeatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
+      # gc()
 
-      # theft tsfel features
-      print("Calculate tsfel features.")
-      RollingTheftInit = RollingTheft$new(windows = 200,
+      # theft tsfeatures features NO MESSAGES  !!!!
+      print("Calculate Tsfeatures features.")
+      RollingTheftInit = RollingTheft$new(windows = c(22 * 6),
                                           workers = 1L,
                                           at = at_,
                                           lag = lag_,
@@ -193,15 +189,36 @@ Features = R6::R6Class(
                                           features_set = "tsfel")
       RollingTheftTsfelFeatures = RollingTheftInit$get_rolling_features(OhlcvInstance)
 
+      # # quarks DOESNT WORK FOR SOME REASON
+      # print("Calculate Quarks features.")
+      # RollingQuarksInit = RollingQuarks(windows = c(22 * 12),
+      #                                   workers = 8L,
+      #                                   at = at_,
+      #                                   lag = lag_,
+      #                                   na_pad = TRUE,
+      #                                   simplify = FALSE)
+      # RollingQuarksFeatures = RollingQuarksInit$get_rolling_features(OhlcvInstance)
+      # gc()
+
       # merge all features
       features <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"), all.x = TRUE, all.y = FALSE),
-                         list(OhlcvFeaturesSet, RollingBidAskFeatures, RollingBackCusumFeatures, RollingExuberFeatures,
-                              RollingForecatsAutoarimaFeatures, RollingForecatNnetarFeatures,
+                         list(OhlcvFeaturesSet_sample, RollingBidAskFeatures, RollingBackCusumFeatures,
+                              RollingExuberFeatures, RollingForecatsAutoarimaFeatures, RollingForecatNnetarFeatures,
                               RollingGasFeatures, RollingGpdFeatures, RollingTheftCatch22Features,
-                              RollingTheftFeastsFatures, RollingTheftTsfeaturesFeatures, RollingTheftTsfelFeatures))
+                              RollingTheftFeastsFatures, RollingTheftTsfelFeatures))
+
+      # change column names to be acceptabale for mlr3 framewrok
+      colnames(features) <- gsub(" |-", "_", colnames(features))
 
 
       return(features)
     }
   )
 )
+# data(spy_hour)
+# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+# FeaturesInstance = Features$new(OhlcvInstance,
+#                                 at = c(300:315, 1000:1100),
+#                                 lag = 1L)
+# x = FeaturesInstance$get_features()
+# tail(x)

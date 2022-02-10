@@ -74,16 +74,4 @@ RollingGasInit = RollingGas$new(windows = 200,
                                 prediction_horizont = 10)
 x = RollingGasInit$get_rolling_features(OhlcvInstance)
 head(x)
-# parallel and multiple windows
-RollingGasInit = RollingGas$new(windows = c(200, 300),
-                                workers = 4L,
-                                at = c(300:310, 500:510),
-                                lag = 1L,
-                                na_pad = TRUE,
-                                simplify = FALSE,
-                                gas_dist = "sstd",
-                                gas_scaling = "Identity",
-                                prediction_horizont = 10)
-x = RollingGasInit$get_rolling_features(OhlcvInstance)
-head(x)
 }
