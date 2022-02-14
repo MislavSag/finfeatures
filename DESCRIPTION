@@ -37,7 +37,8 @@ Imports:
     future,
     theft,
     RollingWindow,
-    tsfeatures
+    tsfeatures,
+    ufRisk
 Remotes:
     ottosven/backCUSUM,
     andrewuhl/RollingWindow,

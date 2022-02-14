@@ -16,6 +16,7 @@
 #' @import quarks
 #' @import tvgarch
 #' @import tsfeatures
+#' @import ufRisk
 #' @importFrom R6 R6Class is.R6
 #' @importFrom roll roll_sd roll_lm roll_quantile
 #' @importFrom QuantTools roll_percent_rank sma ema rsi

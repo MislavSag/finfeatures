@@ -111,6 +111,6 @@ RollingGeneric = R6::R6Class(
 
   private = list(
 
-    packages = c("data.table", "exuber", "backcCUSUM", "quarks")
+    packages = c("data.table", "exuber", "backcCUSUM", "quarks", "ufRisk")
   )
 )
