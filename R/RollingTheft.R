@@ -82,17 +82,7 @@ RollingTheft = R6::R6Class(
       }
 
       # calculate features
-      # print(length(data))
-      # print(nrow(data))
-      # print(head(data))
-      # print(data$close)
-      print(dput(data))
       y <- as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE))
-      # y <- tryCatch(
-      #   as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE)),
-      #   error = function(e) NULL
-      # )
-      # if (is.null(y)) print(data$close)
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
