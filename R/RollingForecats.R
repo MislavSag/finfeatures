@@ -56,8 +56,6 @@ RollingForecats = R6::R6Class(
     #' Create a new RollingForecats object.
     #'
     #' @param windows Vector of windows that will be applied on features.
-#'                                               h = 10)
-#'                                               h = 10)
     #' @param at Argument at in runner package.
     #' @param na_pad Argument na_pad in runner package.
     #' @param simplify Argument simplify in runner package.
@@ -66,6 +64,8 @@ RollingForecats = R6::R6Class(
     #'
     #' @return A new `RollingForecats` object.
     initialize = function(windows, workers, lag, at, na_pad, simplify, forecast_type = c("autoarima", "nnetar", "ets"), h = 10) {
+
+      # parameters
       self$forecast_type = forecast_type
       self$h = h
 
@@ -75,7 +75,8 @@ RollingForecats = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -97,16 +98,16 @@ RollingForecats = R6::R6Class(
 
       # calculate arima forecasts
       if (self$forecast_type == "autoarima") {
-        y <- auto.arima(data$returns)
-        y <- as.data.table(forecast(y, self$h))
+        y <- forecast::auto.arima(data$returns)
+        y <- as.data.table(forecast::forecast(y, self$h))
         cols_prefix <- "autoarima_"
       } else if (self$forecast_type == "nnetar") {
-        y <- nnetar(na.omit(data$returns))
-        y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
+        y <- forecast::nnetar(na.omit(data$returns))
+        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
         cols_prefix <- "nnetar_"
       } else if (self$forecast_type == "ets") {
-        y <- ets(na.omit(data[, get(price)]))
-        y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
+        y <- forecast::ets(na.omit(data[, get(price)]))
+        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
         y <- y - tail(data[, get(price)], 1)
         cols_prefix <- "ets_"
       }
@@ -122,5 +123,8 @@ RollingForecats = R6::R6Class(
       colnames(sd_forecasts) <- gsub(" ", "", paste0(cols_prefix, "sd_", window, "_", colnames(sd_forecasts)))
       data.table(symbol = data$symbol[1], date = data$date[length(data$date)], first_forecasts, last_forecasts, mean_forecasts, sd_forecasts)
     }
+  ),
+  private = list(
+    packages = "forecast"
   )
 )

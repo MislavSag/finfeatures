@@ -39,7 +39,7 @@ Function calculates radf values from exuber package on rolling window.
 \section{Fields}{
 
 \describe{
-\item{\code{exuber_lag}}{LAg to use in exuber, see exuber package.}
+\item{\code{exuber_lag}}{Lag to use in exuber, see exuber package.}
 }}
 
 \examples{

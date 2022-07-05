@@ -30,7 +30,7 @@ RollingExuber = R6::R6Class(
 
   public = list(
 
-    #' @field exuber_lag LAg to use in exuber, see exuber package.
+    #' @field exuber_lag Lag to use in exuber, see exuber package.
     exuber_lag = NULL,
 
     #' @description
@@ -45,16 +45,21 @@ RollingExuber = R6::R6Class(
     #' @param exuber_lag Exuber lag, see exuber package
     #'
     #' @return A new `RollingExuber` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify, exuber_lag = 0L) {
+    initialize = function(windows, workers, lag, at, na_pad, simplify,
+                          exuber_lag = 0L) {
+
+      # initialize exuber arguments
       self$exuber_lag = exuber_lag
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -75,7 +80,7 @@ RollingExuber = R6::R6Class(
       }
 
       # calculate radf valuies and save
-      y <- tryCatch(radf(data[, get(price)], lag = self$exuber_lag, minw = psy_minw(window)), error = function(e) NA)
+      y <- tryCatch(exuber::radf(data[, get(price)], lag = self$exuber_lag, minw = psy_minw(window)), error = function(e) NA)
       if (all(is.na(y))) {
         return(NULL)
       } else {
@@ -87,5 +92,9 @@ RollingExuber = R6::R6Class(
         return(as.data.table(result))
       }
     }
+  ),
+
+  private = list(
+    packages = c("exuber")
   )
 )

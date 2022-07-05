@@ -4,9 +4,7 @@
 \alias{RollingForecats}
 \title{RollingForecats Class}
 \arguments{
-\item{windows}{Vector of windows that will be applied on features.
-h = 10)
-h = 10)}
+\item{windows}{Vector of windows that will be applied on features.}
 
 \item{at}{Argument at in runner package.}
 

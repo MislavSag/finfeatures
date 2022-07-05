@@ -7,14 +7,15 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingTheftInit = RollingTsfeatures$new(windows = 200,
-#'                                     workers = 1L,
-#'                                     at = c(300, 500),
-#'                                     lag = 0L,
-#'                                     na_pad = TRUE,
-#'                                     simplify = FALSE)
-#' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+#' RollingTsfeaturesInit = RollingTsfeatures$new(windows = 200,
+#'                                               workers = 1L,
+#'                                               at = c(300, 500),
+#'                                               lag = 0L,
+#'                                               na_pad = TRUE,
+#'                                               simplify = FALSE)
+#' x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
 #' head(x)
+# EROR: 8 nodes produced errors; first error: This time series is too short. Specify proper segment length in `l`
 RollingTsfeatures = R6::R6Class(
   "RollingTsfeatures",
   inherit = RollingGeneric,
@@ -60,6 +61,12 @@ RollingTsfeatures = R6::R6Class(
         return(NA)
       }
 
+      # DEBUG
+      # print(head(data))
+      # print(data[, get(price)])
+      # test_ <<- data[, get(price)]
+      # DEBUG
+
       featureList <- c("stl_features", "entropy", "acf_features",
                        "compengine", "arch_stat", "crossing_points", "flat_spots",
                        "heterogeneity", "holt_parameters", "hurst",
@@ -71,6 +78,12 @@ RollingTsfeatures = R6::R6Class(
       y <- as.data.table(tsfeatures(data[, get(price)], features = featureList))
       colnames(y) <- paste(colnames(y), window, sep = "_")
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
+      colnames(results) <- gsub(" |-", "_", colnames(results))
+
+      ################## DEBUG ###############
+      # test__ <<- data[, get(price)]
+      ################## DEBUG ###############
+
       results
     }
   )

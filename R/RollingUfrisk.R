@@ -73,7 +73,8 @@ RollingUfrisk = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -99,22 +100,38 @@ RollingUfrisk = R6::R6Class(
       results_l <- list()
       for (i in 1:length(model)) {
         # calculate Var and ES
-        y = varcast(data[, get(price)], a.v = self$a_v, a.e = self$a_e,
-                    model = model[i], garchOrder = self$garch_order, n.out = 1)
+        y <- tryCatch({
+          ufRisk::varcast(data[, get(price)], a.v = self$a_v, a.e = self$a_e,
+                          model = model[i], garchOrder = self$garch_order, n.out = 1)
+        }, error = function(e) NULL)
 
         # DEBUG
         # y = varcast(spy_hour$close[1:1000], a.v = 0.99, a.e = 0.975,
         #             model = model[i], garchOrder = c(1,1), n.out = 1)
+        # y = varcast(test_, a.v = 0.99, a.e = 0.975,
+        #             model = model[i], garchOrder = c(1,1), n.out = 1)
 
-        # clean results
-        risk_measures <- data.frame(es = y$ES, var_e = y$VaR.e, var_v = y$VaR.v)
-        colnames(risk_measures) <- paste0("ufrisk_", model[i], "_", colnames(risk_measures), "_", window)
-        results_l[[i]] <- risk_measures
+        # check if there are errors
+        if (is.null(y)) {
+          risk_measures <- data.frame(es = NA, var_e = NA, var_v = NA)
+          colnames(risk_measures) <- paste0("ufrisk_", model[i], "_", colnames(risk_measures), "_", window)
+          results_l[[i]] <- risk_measures
+        } else {
+          # clean results
+          risk_measures <- data.frame(es = y$ES, var_e = y$VaR.e, var_v = y$VaR.v)
+          colnames(risk_measures) <- paste0("ufrisk_", model[i], "_", colnames(risk_measures), "_", window)
+          results_l[[i]] <- risk_measures
+        }
+
       }
       results_l <- lapply(results_l, function(x) x[1, ])
       result <- do.call(cbind, results_l)
       result <- cbind(symbol = data$symbol[1], date = tail(data$date, 1), result)
       return(as.data.table(result))
     }
+  ),
+
+  private = list(
+    packages = "ufRisk"
   )
 )

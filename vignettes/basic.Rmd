@@ -24,17 +24,66 @@ Data for predicting financial time series prices in general includes:
 2. Fundamental data
 3. Alternative data.
 
-For know we only implement features generation for market data. 
+For now, we only implement features generation for market data.
 
-The simplest way to use the package is to use `Features` class, which creates all features:
+# OhlcvFeatures
 
-```{r}
+# OHLCV data
+
+Practioners mostly use OHLCV data in their analysis. If you want to use OHLCV 
+data in finfeatures package you should first create `Ohlcv` class:
+
+``` {r}
 data(spy_hour)
-# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-# FeaturesInstance = Features$new(OhlcvInstance,
-#                                 at = c(300:315, 1000:1100),
-#                                 lag = 1L)
-# x = FeaturesInstance$get_features()
-# tail(x)
+ohlcv = Ohlcv$new(spy_hour, date_col = "datetime")
 ```
 
+# Rolling indicators
+
+```{r}
+# RollingExuberInit = RollingExuber$new(windows = c(200, 400),
+#                                       workers = 4L,
+#                                       at = 1:nrow(ohlcv$X),
+#                                       lag = 1L,
+#                                       na_pad = TRUE,
+#                                       simplify = FALSE)
+# exuber_features = RollingExuberInit$get_rolling_features(ohlcv)
+
+```
+
+```{r}
+####### DEBUG ######
+# library(ggplot2)
+# 
+# ggplot(exuber_features, aes(x = date)) +
+#   geom_line(aes(y = exuber_200_0_bsadf))
+# 
+# 
+# x <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"), all.x = TRUE, all.y = FALSE),
+#             x = list(ohlcv$X, exuber_features))
+# 
+# ggplot(x, aes(x = date, y = close, colour = (exuber_200_0_bsadf > 1))) +
+#   geom_line(aes(group = 1))
+# 
+# ggplot(x, aes(x = date)) +
+#   geom_line(aes(y = close)) +
+#   geom_point(aes(y = exuber_400_0_bsadf, color = "red", size = 2))
+
+####### DEBUG ######  
+```
+
+
+Now we can calculate come common used features using `OhlcvFeatures` class:
+
+``` {r}
+RollingOhlcvFeatures = OhlcvFeatures$new(at = c(500, 600),
+                                         windows = c(200, 300),
+                                         quantile_divergence_window =  c(50, 100))
+ohlcv_features = RollingOhlcvFeatures$get_ohlcv_features(ohlcv)
+tail(ohlcv_features)
+```
+
+
+
+
+The simplest way to use the package is to use `Features` class, which creates all features:

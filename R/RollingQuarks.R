@@ -67,7 +67,8 @@ RollingQuarks = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -110,21 +111,21 @@ RollingQuarks = R6::R6Class(
         params_$p <- params_$p / 1000
 
         if (params_$method == "fhs") {
-          y <- rollcast(data[, get(price)], # data[, get(price)],
-                        p = params_$p,
-                        model = params_$model,
-                        method = params_$method,
-                        nout = 1L,
-                        nwin = window - 1,
-                        nboot = 1000
+          y <- quarks::rollcast(data[, get(price)], # data[, get(price)],
+                                p = params_$p,
+                                model = params_$model,
+                                method = params_$method,
+                                nout = 1L,
+                                nwin = window - 1,
+                                nboot = 1000
           )
         } else {
-          y <- rollcast(data[, get(price)], # data[, get(price)],
-                        p = params_$p,
-                        model = params_$model,
-                        method = params_$method,
-                        nout = 1L,
-                        nwin = window - 1,
+          y <- quarks::rollcast(data[, get(price)], # data[, get(price)],
+                                p = params_$p,
+                                model = params_$model,
+                                method = params_$method,
+                                nout = 1L,
+                                nwin = window - 1,
           )
         }
         VaR <- (y$xout - abs(y$VaR)) / y$xout
@@ -138,5 +139,9 @@ RollingQuarks = R6::R6Class(
       result <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], result)
       return(as.data.table(result))
     }
+  ),
+
+  private = list(
+    packages = "quarks"
   )
 )

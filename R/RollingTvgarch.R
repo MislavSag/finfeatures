@@ -22,6 +22,30 @@ RollingTvgarch = R6::R6Class(
   public = list(
 
     #' @description
+    #' Create a new RollingExuber object.
+    #'
+    #' @param windows Vector of windows that will be applied on features.
+    #' @param workers Number of workers. Greater than 1 for parallle processing
+    #' @param lag Lag variable in runner package.
+    #' @param at Argument at in runner package.
+    #' @param na_pad Argument na_pad in runner package.
+    #' @param simplify Argument simplify in runner package.
+    #'
+    #' @return A new `RollingGas` object.
+    initialize = function(windows, workers, lag, at, na_pad, simplify) {
+
+      super$initialize(
+        windows,
+        workers,
+        lag,
+        at,
+        na_pad,
+        simplify,
+        private$packages
+      )
+    },
+
+    #' @description
     #' Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
     #'
     #' @param data X field of Ohlcv object
@@ -43,7 +67,7 @@ RollingTvgarch = R6::R6Class(
 
       # calculate arima forecasts
       y <- na.omit(data$returns) * 100
-      y <- tvgarch(y, turbo = TRUE)
+      y <- tvgarch::tvgarch(y, turbo = TRUE)
       pred <- predict(y)
       coefs <- coef(y)
       results <- data.table(pred_1 = pred[1], pred_n = tail(pred, 1), pred_mean = mean(pred, na.rm = TRUE), t(coefs))
@@ -52,5 +76,9 @@ RollingTvgarch = R6::R6Class(
       colnames(results)[3:ncol(results)] <- paste(colnames(results)[3:ncol(results)], window, sep = "_")
       return(results)
     }
+  ),
+
+  private = list(
+    packages = "tvgarch"
   )
 )

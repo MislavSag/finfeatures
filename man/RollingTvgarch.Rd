@@ -4,6 +4,18 @@
 \alias{RollingTvgarch}
 \title{RollingTvgarch Class}
 \arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of workers. Greater than 1 for parallle processing}
+
+\item{lag}{Lag variable in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
 \item{data}{X field of Ohlcv object}
 
 \item{window}{window length. This argument is given internaly}
@@ -11,10 +23,14 @@
 \item{price}{Prcie column in Ohlcv}
 }
 \value{
+A new `RollingGas` object.
+
 Calculate rolling tvgarch features from tvgarch package.
 }
 \description{
 Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
+
+Create a new RollingExuber object.
 
 Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
 }

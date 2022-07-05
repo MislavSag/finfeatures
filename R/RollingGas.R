@@ -65,12 +65,16 @@ RollingGas = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
 
       # GAS specification
-      self$GASSpec <- UniGASSpec(Dist = self$gas_dist, ScalingType = self$gas_scaling,
-                                 GASPar = list(location = TRUE, scale = TRUE, shape = TRUE, skewness = TRUE))
+      self$GASSpec <- GAS::UniGASSpec(Dist = self$gas_dist,
+                                      ScalingType = self$gas_scaling,
+                                      GASPar = list(location = TRUE,
+                                                    scale = TRUE, shape = TRUE,
+                                                    skewness = TRUE))
 
     },
 
@@ -118,8 +122,9 @@ RollingGas = R6::R6Class(
       }
 
       # calculate arima forecasts
-      Fit <- tryCatch(UniGASFit(self$GASSpec, na.omit(data$returns)), error = function(e) NA)
-      if (isS4(Fit)) y <- UniGASFor(Fit, H = self$prediction_horizont, ReturnDraws = TRUE) else y <- NA
+      Fit <- tryCatch(GASS::UniGASFit(self$GASSpec, na.omit(data$returns)),
+                      error = function(e) NA)
+      if (isS4(Fit)) y <- GASS::UniGASFor(Fit, H = self$prediction_horizont, ReturnDraws = TRUE) else y <- NA
       if ((!isS4(Fit) && is.na(y)) || any(is.na(y@Draws))) {
         return(NA)
       } else {
@@ -136,5 +141,9 @@ RollingGas = R6::R6Class(
         return(results)
       }
     }
+  ),
+
+  private = list(
+    packages = "GAS"
   )
 )

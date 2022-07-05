@@ -16,6 +16,8 @@
 
 \item{simplify}{Argument simplify in runner package.}
 
+\item{packages}{Packages that need to be installed.}
+
 \item{x}{Ohlcv object.}
 
 \item{window}{Rolling window lengths.}
@@ -55,5 +57,7 @@ Helping function for calculating rolling features.
 \item{\code{na_pad}}{Argument na_pad from runner package}
 
 \item{\code{simplify}}{Argument simplify from runner package.}
+
+\item{\code{packages}}{Packages that needs to be installed.}
 }}
 

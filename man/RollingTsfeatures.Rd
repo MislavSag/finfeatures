@@ -37,12 +37,12 @@ Function calculates tsfeatures features on rolling window.
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingTheftInit = RollingTsfeatures$new(windows = 200,
-                                    workers = 1L,
-                                    at = c(300, 500),
-                                    lag = 0L,
-                                    na_pad = TRUE,
-                                    simplify = FALSE)
-x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+RollingTsfeaturesInit = RollingTsfeatures$new(windows = 200,
+                                              workers = 1L,
+                                              at = c(300, 500),
+                                              lag = 0L,
+                                              na_pad = TRUE,
+                                              simplify = FALSE)
+x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

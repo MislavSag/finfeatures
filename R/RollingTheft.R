@@ -86,7 +86,11 @@ RollingTheft = R6::R6Class(
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
-      results
+
+      # chamnge column names to fit to mlr3
+      colnames(results) <- gsub(" |-", "_", colnames(results))
+
+      return(results)
     }
   )
 )

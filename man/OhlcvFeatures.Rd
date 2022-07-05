@@ -4,13 +4,15 @@
 \alias{OhlcvFeatures}
 \title{OhlcvFeatures Class}
 \arguments{
+\item{at}{Row index for which we calcualte indicators.}
+
 \item{windows}{Length of window for calculating rolling versions of the indicators.}
 
 \item{quantile_divergence_window}{Window sizes from divergence from quantiles indicator.}
 
 \item{data}{X field of Ohlcv object}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{window length. This argument is given internaly.}
 
 \item{returns}{Returns column.}
 
@@ -39,6 +41,8 @@ Helper function for calculating changepoints features
 \section{Fields}{
 
 \describe{
+\item{\code{Row}}{index for which we calcualte indicators.}
+
 \item{\code{windows}}{Length of window for calculating rolling versions of the indicators.}
 
 \item{\code{quantile_divergence_window}}{Window sizes from divergence from quantiles indicator.}
@@ -47,7 +51,9 @@ Helper function for calculating changepoints features
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingGpdInit = OhlcvFeatures$new(windows = c(200, 300), quantile_divergence_window =  c(50, 100))
-x = RollingGpdInit$get_ohlcv_features(OhlcvInstance)
+RollingOhlcvFeatures = OhlcvFeatures$new(at = NULL,
+                                         windows = c(200, 300),
+                                         quantile_divergence_window =  c(50, 100))
+x = RollingOhlcvFeatures$get_ohlcv_features(OhlcvInstance)
 tail(x)
 }

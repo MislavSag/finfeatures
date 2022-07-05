@@ -28,6 +28,9 @@
       #' @field simplify Argument simplify from runner package.
       simplify = NULL,
 
+      #' @field packages Packages that needs to be installed.
+      packages = NULL,
+
       #' @description
       #' Create a new RollingGeneric object.
       #'
@@ -37,15 +40,19 @@
       #' @param at Argument at in runner package.
       #' @param na_pad Argument na_pad in runner package.
       #' @param simplify Argument simplify in runner package.
+      #' @param packages Packages that need to be installed.
       #'
       #' @return A new `RollingGeneric` object.
-      initialize = function(windows = 10, workers = 1L, lag = integer(1), at = integer(0), na_pad = TRUE, simplify = FALSE) {
+      initialize = function(windows = 10, workers = 1L, lag = integer(1),
+                            at = integer(0), na_pad = TRUE, simplify = FALSE,
+                            packages = NULL) {
         self$windows = windows
         self$workers = workers
         self$at = at
         self$lag = lag
         self$na_pad = na_pad
         self$simplify = simplify
+        self$packages = packages
       },
 
       #' @description
@@ -68,6 +75,14 @@
       #' @return Depending on used classes for clalculating features. It returns df.
       get_rolling_features = function(Ohlcv) {
 
+        installed <- all(sapply(self$packages, requireNamespace, quietly = TRUE))
+
+        if (!(installed)) {
+          message(paste0("You need to install the packages ",
+                         self$packages, " to use this class."))
+          return(NULL)
+        }
+
         # get data
         data = Ohlcv$X
 
@@ -76,7 +91,7 @@
           cl <- parallel::makeCluster(self$workers)
           # registerDoParallel(cl)
           parallel::clusterExport(cl, c("data"), envir = environment())
-          parallel::clusterCall(cl, function() lapply(private$packages, require, character.only = TRUE))
+          parallel::clusterCall(cl, function() lapply(self$packages, require, character.only = TRUE))
         } else {
           cl <- NULL
         }
@@ -107,10 +122,5 @@
         data_all_windows <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"), all.x = TRUE, all.y = TRUE), data_list)
         return(data_all_windows)
       }
-    ),
-
-    private = list(
-
-      packages = c("data.table", "exuber", "backcCUSUM", "quarks", "ufRisk", "theft")
     )
   )

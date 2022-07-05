@@ -17,33 +17,32 @@ Imports:
     TTR,
     roll,
     QuantTools,
-    forecast,
     runner,
-    exuber,
     zoo,
-    GAS,
-    ptsuite,
     reticulate,
     bidask,
     parallel,
     doParallel,
     mlr3misc,
-    backports,
     lgr,
     cpm,
-    quarks,
-    tvgarch,
-    backCUSUM,
     future,
     theft,
     RollingWindow,
     tsfeatures,
-    ufRisk
+    ptsuite,
+    backCUSUM,
 Remotes:
     ottosven/backCUSUM,
     andrewuhl/RollingWindow,
     hendersontrent/theft
 Suggests:
+    exuber,
+    GAS,
+    tvgarch,
+    ufRisk,
+    forecast,
+    quarks,
     roxygen2,
     devtools,
     knitr,
@@ -51,7 +50,7 @@ Suggests:
     testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.1.2
+RoxygenNote: 7.2.0
 VignetteBuilder: knitr
 Roxygen: list(r6 = FALSE)
 Config/testthat/edition: 3
