@@ -20,7 +20,6 @@ Imports:
     runner,
     zoo,
     reticulate,
-    bidask,
     parallel,
     doParallel,
     mlr3misc,
@@ -28,11 +27,8 @@ Imports:
     cpm,
     future,
     theft,
-    RollingWindow,
-    tsfeatures,
-    backCUSUM
+    RollingWindow
 Remotes:
-    ottosven/backCUSUM,
     andrewuhl/RollingWindow,
     hendersontrent/theft
 Suggests:
@@ -43,6 +39,9 @@ Suggests:
     forecast,
     quarks,
     ptsuite,
+    tsfeatures,
+    bidask,
+    backCUSUM,
     roxygen2,
     devtools,
     knitr,

@@ -4,6 +4,18 @@
 \alias{RollingBackcusum}
 \title{RollingBackcusum Class}
 \arguments{
+\item{windows}{Vector of windows that will be applied on features.}
+
+\item{workers}{Number of threads.}
+
+\item{lag}{Argument lag in runner package.}
+
+\item{at}{Argument at in runner package.}
+
+\item{na_pad}{Argument na_pad in runner package.}
+
+\item{simplify}{Argument simplify in runner package.}
+
 \item{data}{X field of Ohlcv object}
 
 \item{window}{window length. This argument is given internaly}
@@ -11,10 +23,14 @@
 \item{price}{Prcie column in Ohlcv}
 }
 \value{
+A new `RollingBackcusum` object.
+
 Calculate rolling radf features from backCUSUM package.
 }
 \description{
 Function calculates backCUSUM tests on rolling window from backCUSUM pakcage.
+
+Create a new RollingBackcusum object.
 
 Function calculates radf values from exuber package on rolling window.
 }

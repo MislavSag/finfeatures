@@ -28,7 +28,34 @@ RollingBackcusum = R6::R6Class(
   "RollingBackcusum",
   inherit = RollingGeneric,
 
+
   public = list(
+
+    #' @description
+    #' Create a new RollingBackcusum object.
+    #'
+    #' @param windows Vector of windows that will be applied on features.
+    #' @param workers Number of threads.
+    #' @param lag Argument lag in runner package.
+    #' @param at Argument at in runner package.
+    #' @param na_pad Argument na_pad in runner package.
+    #' @param simplify Argument simplify in runner package.
+    #'
+    #' @return A new `RollingBackcusum` object.
+    initialize = function(windows, workers, lag, at, na_pad, simplify) {
+
+      # super init
+      super$initialize(
+        windows,
+        workers,
+        lag,
+        at,
+        na_pad,
+        simplify,
+        private$packages
+      )
+    },
+
 
     #' @description
     #' Function calculates radf values from exuber package on rolling window.
@@ -48,7 +75,7 @@ RollingBackcusum = R6::R6Class(
 
       # calculate arima forecasts
       y <- na.omit(data$returns)
-      y <- SBQ.test(as.formula('y ~ 1'), alternative = 'greater')# [['statistic']]
+      y <- backCUSUM::SBQ.test(as.formula('y ~ 1'), alternative = 'greater')# [['statistic']]
       results <- c(y[['statistic']], as.integer(y[['rejection']]))
       names(results) <- c("statistics", paste0("backcusum_rejections_", as.numeric(names(y[['rejection']])) * 1000))
       results <- as.data.table(as.list(results))
@@ -56,5 +83,9 @@ RollingBackcusum = R6::R6Class(
       colnames(results)[3:ncol(results)] <- paste(colnames(results)[3:ncol(results)], window, sep = "_")
       return(results)
     }
+  ),
+
+  private = list(
+    packages = "backCUSUM"
   )
 )

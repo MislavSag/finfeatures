@@ -56,6 +56,8 @@ RollingForecats = R6::R6Class(
     #' Create a new RollingForecats object.
     #'
     #' @param windows Vector of windows that will be applied on features.
+    #' @param workers Number of threads.
+    #' @param lag Argument lag in runner package.
     #' @param at Argument at in runner package.
     #' @param na_pad Argument na_pad in runner package.
     #' @param simplify Argument simplify in runner package.
@@ -99,15 +101,15 @@ RollingForecats = R6::R6Class(
       # calculate arima forecasts
       if (self$forecast_type == "autoarima") {
         y <- forecast::auto.arima(data$returns)
-        y <- as.data.table(forecast::forecast(y, self$h))
+        y <- as.data.table(forecast(y, self$h))
         cols_prefix <- "autoarima_"
       } else if (self$forecast_type == "nnetar") {
         y <- forecast::nnetar(na.omit(data$returns))
-        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
+        y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
         cols_prefix <- "nnetar_"
       } else if (self$forecast_type == "ets") {
         y <- forecast::ets(na.omit(data[, get(price)]))
-        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
+        y <- as.data.table(forecast(y, PI = TRUE, h=self$h, npaths = 120))
         y <- y - tail(data[, get(price)], 1)
         cols_prefix <- "ets_"
       }

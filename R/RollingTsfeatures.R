@@ -41,7 +41,8 @@ RollingTsfeatures = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -75,7 +76,7 @@ RollingTsfeatures = R6::R6Class(
                        "unitroot_pp", "embed2_incircle", "firstzero_ac",
                        "histogram_mode", "localsimple_taures", "sampenc",
                        "spreadrandomlocal_meantaul")
-      y <- as.data.table(tsfeatures(data[, get(price)], features = featureList))
+      y <- as.data.table(tsfeatures::tsfeatures(data[, get(price)], features = featureList))
       colnames(y) <- paste(colnames(y), window, sep = "_")
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
       colnames(results) <- gsub(" |-", "_", colnames(results))
@@ -86,5 +87,9 @@ RollingTsfeatures = R6::R6Class(
 
       results
     }
+  ),
+
+  private = list(
+    packages = "tsfeatures"
   )
 )

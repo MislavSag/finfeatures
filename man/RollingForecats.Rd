@@ -6,6 +6,10 @@
 \arguments{
 \item{windows}{Vector of windows that will be applied on features.}
 
+\item{workers}{Number of threads.}
+
+\item{lag}{Argument lag in runner package.}
+
 \item{at}{Argument at in runner package.}
 
 \item{na_pad}{Argument na_pad in runner package.}

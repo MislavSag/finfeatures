@@ -46,7 +46,8 @@ RollingBidAsk = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -72,9 +73,9 @@ RollingBidAsk = R6::R6Class(
       data_ <- as.xts.data.table(data_)
 
       # calculate spreads
-      y <- tryCatch(spread(data_,
-                           method = self$methods,
-                           probs = c(0.05, 0.95)), error = function(e) NA)
+      y <- tryCatch(bidask::spread(data_,
+                                   method = self$methods,
+                                   probs = c(0.05, 0.95)), error = function(e) NA)
       if (all(is.na(y))) {
         return(NULL)
       } else {
@@ -84,5 +85,9 @@ RollingBidAsk = R6::R6Class(
         return(as.data.table(result))
       }
     }
+  ),
+
+  private = list(
+    packages = "bidask"
   )
 )
