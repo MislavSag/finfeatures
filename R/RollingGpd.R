@@ -57,7 +57,8 @@ RollingGpd = R6::R6Class(
         lag,
         at,
         na_pad,
-        simplify
+        simplify,
+        private$packages
       )
     },
 
@@ -89,15 +90,15 @@ RollingGpd = R6::R6Class(
         risks <- data.table(t(rep(0, length(columns_names))))
         setnames(risks, colnames(risks), columns_names)
       } else {
-        ptest <- pareto_test(x)$`p-value`
-        estimates <- as.data.table(generate_all_estimates(x))
+        ptest <- ptsuite::pareto_test(x)$`p-value`
+        estimates <- as.data.table(ptsuite::generate_all_estimates(x))
         shapes <- data.table::dcast(estimates[, 1:2], . ~ `Method.of.Estimation`, value.var = 'Shape.Parameter')
         shapes <- shapes[, 2:ncol(shapes)]
         colnames(shapes) <- paste0('shapes_', gsub(" ", "", tolower(colnames(shapes))))
         scales <- data.table::dcast(estimates[, c(1, 3)], . ~ `Method.of.Estimation`, value.var = 'Scale.Parameter')
         scales <- scales[, 2:ncol(scales)]
         colnames(scales) <- paste0('scales_', gsub(" ", "", tolower(colnames(scales))))
-        hill_estimate <- alpha_hills(x, hill_threshold, FALSE)
+        hill_estimate <- ptsuite::alpha_hills(x, hill_threshold, FALSE)
         hill_shape <- hill_estimate$shape
         risks <- as.data.table(data.frame(as.list(c(scales, shapes))))
         risks <- cbind(ptest, hill_shape, risks)
@@ -140,5 +141,9 @@ RollingGpd = R6::R6Class(
       return(results)
 
     }
+  ),
+
+  private = list(
+    packages = "ptsuite"
   )
 )

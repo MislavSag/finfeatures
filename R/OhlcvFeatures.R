@@ -165,14 +165,14 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, (new_cols) := lapply(windows_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
       # rolling linear regression model: y = 1 + date + e NOT THAT GOOD AFTER ALL ?
-      # new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
-      # new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      # ohlcv[, (new_cols) := do.call(cbind,
-      #                               lapply(windows_,
-      #                                      function(w) as.data.frame(as.data.table(roll::roll_lm(log(close), date, width = w))))),
-      #       by = symbol]
-      # new_cols_change <- new_cols[grep("cf|std", new_cols)]
-      # ohlcv[, (new_cols_change) := lapply(.SD, function(x) x / 100000), .SDcols = new_cols_change]
+      new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
+      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind,
+                                    lapply(windows_,
+                                           function(w) as.data.frame(as.data.table(roll::roll_lm(1:length(close), log(close), width = w))))),
+            by = symbol]
+      cols_ <- new_cols[grep("lm_cf", new_cols)]
+      ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
 
       # rolling sharpe ratio
       new_cols <- paste0("sharpe_", windows_)
@@ -204,8 +204,10 @@ OhlcvFeatures = R6::R6Class(
         as.integer(names(sort(table(x), decreasing = TRUE))[1])
         # TODO: faster way sto calculate mode: https://stackoverflow.com/questions/55212746/rcpp-fast-statistical-mode-function-with-vector-input-of-any-type
       })), by = symbol]
+      new_cols_close <- paste0(new_cols, "_ratio")
+      ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
 
-      # support / resistance VWA
+      # TODO: support / resistance VWA
       # new_cols_ <- paste0("rolling_mode_vma_", windows__)
       # ohlcv[, (new_cols_) := lapply(.SD, function(w) TTR::VWAP(w, volume, 10)), by = symbol, .SDcols = new_cols]
 

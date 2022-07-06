@@ -5,7 +5,6 @@
 #' @import theft
 #' @import zoo
 #' @import parallel
-#' @import ptsuite
 #' @import reticulate
 #' @import backCUSUM
 #' @import RollingWindow

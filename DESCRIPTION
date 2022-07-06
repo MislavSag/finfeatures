@@ -30,8 +30,7 @@ Imports:
     theft,
     RollingWindow,
     tsfeatures,
-    ptsuite,
-    backCUSUM,
+    backCUSUM
 Remotes:
     ottosven/backCUSUM,
     andrewuhl/RollingWindow,
@@ -43,6 +42,7 @@ Suggests:
     ufRisk,
     forecast,
     quarks,
+    ptsuite,
     roxygen2,
     devtools,
     knitr,
