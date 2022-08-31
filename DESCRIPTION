@@ -28,7 +28,7 @@ Imports:
     QuantTools
 Remotes:
     andrewuhl/RollingWindow,
-    git::https://api.bitbucket.org/2.0/repositories/quanttools/quanttools
+    bitbucket::quanttools/quanttools
 Suggests:
     exuber,
     GAS,
