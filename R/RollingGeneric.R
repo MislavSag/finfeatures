@@ -118,8 +118,11 @@
           # stopImplicitCluster()
         }
 
-        # merge all results
-        data_all_windows <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"), all.x = TRUE, all.y = TRUE), data_list)
+        # merge all results and make column names R aceptabale
+        data_all_windows <- Reduce(function(x, y) merge(x, y, by = c("symbol", "date"),
+                                                        all.x = TRUE, all.y = TRUE),
+                                   data_list)
+        colnames(data_all_windows) <- gsub(" |-", "_", colnames(data_all_windows))
         return(data_all_windows)
       }
     )

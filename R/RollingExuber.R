@@ -80,7 +80,15 @@ RollingExuber = R6::R6Class(
       }
 
       # calculate radf valuies and save
-      y <- tryCatch(exuber::radf(data[, get(price)], lag = self$exuber_lag, minw = psy_minw(window)), error = function(e) NA)
+      # library(finfeatures)
+      # data(spy_hour)
+      # x <- spy_hour$close[1:600]
+      # exuber::radf(x, lag = self$exuber_lag, minw = psy_minw(window))
+
+      y <- tryCatch(exuber::radf(data[, get(price)],
+                                 lag = self$exuber_lag,
+                                 minw = exuber:::psy_minw(window)),
+                    error = function(e) NA)
       if (all(is.na(y))) {
         return(NULL)
       } else {

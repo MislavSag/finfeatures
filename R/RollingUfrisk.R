@@ -94,7 +94,7 @@ RollingUfrisk = R6::R6Class(
         return(NA)
       }
 
-      model = c("sGARCH", "eGARCH", "apARCH", "fiGARCH", "filGARCH") #self$model
+      model = self$model
 
       # get forecasts
       results_l <- list()

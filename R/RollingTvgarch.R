@@ -68,7 +68,7 @@ RollingTvgarch = R6::R6Class(
       # calculate arima forecasts
       y <- na.omit(data$returns) * 100
       y <- tvgarch::tvgarch(y, turbo = TRUE)
-      pred <- predict(y)
+      pred <- as.numeric(predict(y))
       coefs <- coef(y)
       results <- data.table(pred_1 = pred[1], pred_n = tail(pred, 1), pred_mean = mean(pred, na.rm = TRUE), t(coefs))
       colnames(results) <- paste0("tvgarch_", colnames(results))

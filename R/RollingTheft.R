@@ -39,7 +39,8 @@ RollingTheft = R6::R6Class(
     #'
     #' @return A new `RollingTheft` object.
     initialize = function(windows, workers, lag, at, na_pad, simplify,
-                          features_set = c("catch22", "feasts", "tsfeatures", "kats", "tsfresh", "tsfel")) {
+                          features_set = c("catch22", "feasts", "tsfeatures",
+                                           "kats", "tsfresh", "tsfel")) {
       self$features_set = features_set
 
       super$initialize(
@@ -51,15 +52,15 @@ RollingTheft = R6::R6Class(
         simplify
       )
 
-      # set python path
+      # DEBUGE - set python path
       # library(reticulate)
       # reticulate::use_python("C:/ProgramData/Anaconda3/envs/mlfinlabenv/python.exe", required = TRUE)
       # mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
       # pd = reticulate::import("pandas", convert = FALSE)
       # builtins = import_builtins(convert = FALSE)
       # main = import_main(convert = FALSE)
-
-
+      # tsfel = reticulate::import("tsfel", convert = FALSE)
+      # tsfresh = reticulate::import("tsfresh", convert = FALSE)
     },
 
     #' @description
@@ -72,7 +73,7 @@ RollingTheft = R6::R6Class(
     #' @return Calculate rolling radf features from theft package.
     rolling_function = function(data, window, price) {
 
-      # debugging
+      # DEBUG
       # y <<- data
 
       # check if there is enough data
@@ -82,7 +83,12 @@ RollingTheft = R6::R6Class(
       }
 
       # calculate features
-      y <- as.data.table(calculate_features(data, "symbol", "date", price, feature_set = self$features_set, tsfresh_cleanup = TRUE))
+      y <- as.data.table(theft::calculate_features(data,
+                                                   "symbol",
+                                                   "date",
+                                                   price,
+                                                   feature_set = self$features_set,
+                                                   tsfresh_cleanup = TRUE))
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
@@ -92,5 +98,75 @@ RollingTheft = R6::R6Class(
 
       return(results)
     }
+  ),
+  private = list(
+    packages = "theft"
   )
 )
+
+######### DEBUG ###########
+# library(reticulate)
+# library(finfeatures)
+# library(theft)
+# reticulate::use_python("C:/ProgramData/Anaconda3/envs/mlfinlabenv/python.exe", required = TRUE)
+# mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
+# pd = reticulate::import("pandas", convert = FALSE)
+# builtins = import_builtins(convert = FALSE)
+# main = import_main(convert = FALSE)
+# tsfel = reticulate::import("tsfel", convert = FALSE)
+# tsfresh = reticulate::import("tsfresh", convert = FALSE)
+#
+# data(spy_hour)
+# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+# # catch22 features
+# RollingTheftInit = RollingTheft$new(windows = 200,
+#                                     workers = 1L,
+#                                     at = c(300, 500),
+#                                     lag = 0L,
+#                                     na_pad = TRUE,
+#                                     simplify = FALSE,
+#                                     features_set = "tsfresh")
+# x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+# head(x)
+#
+#
+#
+# feature_matrix <- calculate_features(data = simData,
+#                                      id_var = "id",
+#                                      time_var = "timepoint",
+#                                      values_var = "values",
+#                                      group_var = "process",
+#                                      feature_set = "catch22",
+#                                      seed = 123)
+#
+# feature_matrix <- calculate_features(data = simData,
+#                                      id_var = "id",
+#                                      time_var = "timepoint",
+#                                      values_var = "values",
+#                                      group_var = "process",
+#                                      feature_set = "feasts",
+#                                      seed = 123)
+#
+# feature_matrix <- calculate_features(data = simData,
+#                                      id_var = "id",
+#                                      time_var = "timepoint",
+#                                      values_var = "values",
+#                                      group_var = "process",
+#                                      feature_set = "feasts",
+#                                      seed = 123)
+#
+# feature_matrix <- calculate_features(data = simData,
+#                                      id_var = "id",
+#                                      time_var = "timepoint",
+#                                      values_var = "values",
+#                                      group_var = "process",
+#                                      feature_set = "TSFEL",
+#                                      seed = 123)
+#
+# feature_matrix <- calculate_features(data = simData[id == "ARMA(1,1)_30"],
+#                                      id_var = "id",
+#                                      time_var = "timepoint",
+#                                      values_var = "values",
+#                                      # group_var = "process",
+#                                      feature_set = "tsfresh",
+#                                      seed = 123)

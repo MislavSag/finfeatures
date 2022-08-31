@@ -56,18 +56,19 @@ OhlcvFeatures = R6::R6Class(
 
       ###### DEBUG ######
       # data(spy_hour)
+      # data(stocks)
       # library(data.table)
       # library(finfeatures)
-      # ohlcv <- as.data.table(spy_hour)
-      # colnames(ohlcv)[2] <- "date"
+      # library(checkmate)
+      # library(TTR)
+      # ohlcv <- as.data.table(stocks)
       # windows_ = c(8 * 5, 8 * 22)
-      # at_ <- NULL# c(500, 1000)
-      # # frequnit_ = 8
+      # at_ <- c(500, 1000)
       ###### DEBUG ######
 
       # prepare data
       ohlcv <- as.data.table(data$X)
-      setkey(ohlcv, "symbol")
+      # setkey(ohlcv, "symbol") # change sort !
       windows_ = self$windows
       at_ = self$at
       # frequnit_ = self$frequnit
@@ -82,7 +83,8 @@ OhlcvFeatures = R6::R6Class(
       # keep only rows we nedd for calculation, to make calculation faster
       if (!is.null(at_)) {
         keep_dates <- ohlcv[at_, .(symbol, date)]
-        keep_indecies <- lapply(at_, function(x) (max(x - max(windows_), 1)):(min(x + max(windows_), nrow(ohlcv))))
+        # keep_indecies <- lapply(at_, function(x) (max(x - max(windows_), 1)):(min(x + max(windows_), nrow(ohlcv))))
+        keep_indecies <- lapply(at_, function(x) (max(x - max(windows_), 1)):x)
         keep_indecies <- unique(unlist(keep_indecies))
         ohlcv <- ohlcv[keep_indecies]
       }
@@ -140,6 +142,7 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(BBands(close, n = w)))), by = symbol]
       new_cols_change <- new_cols[grep("up|mavg|dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) (close - x) / x), .SDcols = new_cols_change]
+
       # percent rand
       new_cols <- paste0("percent_rank_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) QuantTools::roll_percent_rank(close, n = w)), by = symbol]
@@ -195,17 +198,17 @@ OhlcvFeatures = R6::R6Class(
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
       # support / resistance
-      ohlcv[, close_round := round(close, 0)]
-      windows__ <- unique(c(windows_, 200, 500))
-      new_cols <- paste0("rolling_mode_", windows__)
-      # x <- scale(ohlcv$close_round)
-      # plot(x)
-      ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
-        as.integer(names(sort(table(x), decreasing = TRUE))[1])
-        # TODO: faster way sto calculate mode: https://stackoverflow.com/questions/55212746/rcpp-fast-statistical-mode-function-with-vector-input-of-any-type
-      })), by = symbol]
-      new_cols_close <- paste0(new_cols, "_ratio")
-      ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
+      # ohlcv[, close_round := round(close, 0)]
+      # windows__ <- unique(c(windows_, 200, 500))
+      # new_cols <- paste0("rolling_mode_", windows__)
+      # # x <- scale(ohlcv$close_round)
+      # # plot(x)
+      # ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
+      #   as.integer(names(sort(table(x), decreasing = TRUE))[1])
+      #   # TODO: faster way sto calculate mode: https://stackoverflow.com/questions/55212746/rcpp-fast-statistical-mode-function-with-vector-input-of-any-type
+      # })), by = symbol]
+      # new_cols_close <- paste0(new_cols, "_ratio")
+      # ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
 
       # TODO: support / resistance VWA
       # new_cols_ <- paste0("rolling_mode_vma_", windows__)
@@ -309,6 +312,7 @@ OhlcvFeatures = R6::R6Class(
         ohlcv_sample <- merge(ohlcv, keep_dates,
                               by = c("symbol", "date"), all.x = TRUE, all.y = FALSE)
         ohlcv_sample <- ohlcv_sample[index == TRUE]
+        ohlcv_sample[, index := NULL]
       } else {
         ohlcv_sample <- copy(ohlcv)
       }

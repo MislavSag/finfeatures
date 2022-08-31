@@ -41,14 +41,13 @@ ohlcv = Ohlcv$new(spy_hour, date_col = "datetime")
 # Rolling indicators
 
 ```{r}
-# RollingExuberInit = RollingExuber$new(windows = c(200, 400),
-#                                       workers = 4L,
-#                                       at = 1:nrow(ohlcv$X),
-#                                       lag = 1L,
-#                                       na_pad = TRUE,
-#                                       simplify = FALSE)
-# exuber_features = RollingExuberInit$get_rolling_features(ohlcv)
-
+RollingExuberInit = RollingExuber$new(windows = c(200, 400),
+                                      workers = 1L,
+                                      at = c(500:505),
+                                      lag = 1L,
+                                      na_pad = TRUE,
+                                      simplify = FALSE)
+exuber_features = RollingExuberInit$get_rolling_features(ohlcv)
 ```
 
 ```{r}
@@ -76,11 +75,11 @@ ohlcv = Ohlcv$new(spy_hour, date_col = "datetime")
 Now we can calculate come common used features using `OhlcvFeatures` class:
 
 ``` {r}
-RollingOhlcvFeatures = OhlcvFeatures$new(at = c(500, 600),
-                                         windows = c(200, 300),
-                                         quantile_divergence_window =  c(50, 100))
-ohlcv_features = RollingOhlcvFeatures$get_ohlcv_features(ohlcv)
-tail(ohlcv_features)
+# RollingOhlcvFeatures = OhlcvFeatures$new(at = c(500, 600),
+#                                          windows = c(200, 300),
+#                                          quantile_divergence_window =  c(50, 100))
+# ohlcv_features = RollingOhlcvFeatures$get_ohlcv_features(ohlcv)
+# tail(ohlcv_features)
 ```
 
 

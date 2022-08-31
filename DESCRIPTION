@@ -1,7 +1,7 @@
 Package: finfeatures
 Type: Package
 Title: Features for investing and finance
-Version: 0.1.0
+Version: 0.2.0
 Author: c(
     person("Mislav", "Sagovac", email = "mislav.sagovac@contentio.biz", role = c("cre","aut")))
 Maintainer: Mislav Sagovac <mislav.sagovac@contentio.biz>
@@ -16,9 +16,7 @@ Imports:
     checkmate,
     TTR,
     roll,
-    QuantTools,
     runner,
-    zoo,
     reticulate,
     parallel,
     doParallel,
@@ -26,11 +24,11 @@ Imports:
     lgr,
     cpm,
     future,
-    theft,
-    RollingWindow
+    RollingWindow,
+    QuantTools
 Remotes:
     andrewuhl/RollingWindow,
-    hendersontrent/theft
+    git::https://api.bitbucket.org/2.0/repositories/quanttools/quanttools
 Suggests:
     exuber,
     GAS,
@@ -42,6 +40,8 @@ Suggests:
     tsfeatures,
     bidask,
     backCUSUM,
+    theft,
+    WaveletArima,
     roxygen2,
     devtools,
     knitr,
@@ -49,7 +49,7 @@ Suggests:
     testthat (>= 3.0.0)
 Encoding: UTF-8
 LazyData: true
-RoxygenNote: 7.2.0
+RoxygenNote: 7.2.1
 VignetteBuilder: knitr
 Roxygen: list(r6 = FALSE)
 Config/testthat/edition: 3

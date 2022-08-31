@@ -68,14 +68,17 @@ RollingTsfeatures = R6::R6Class(
       # test_ <<- data[, get(price)]
       # DEBUG
 
+      # remove spreadrandomlocal_meantaul because of error:
+      # This time series is too short. Specify proper segment length in `l`
+      # IF GETTING ABOVE ERROR, INSTALL DEVELOPMENT VERSION OF THE PACKAGE, SEE
+      # MY ISSUE ON GITHUB.
       featureList <- c("stl_features", "entropy", "acf_features",
                        "compengine", "arch_stat", "crossing_points", "flat_spots",
                        "heterogeneity", "holt_parameters", "hurst",
                        "lumpiness", "max_kl_shift", "max_level_shift", "max_var_shift",
                        "nonlinearity", "pacf_features", "stability", "unitroot_kpss",
                        "unitroot_pp", "embed2_incircle", "firstzero_ac",
-                       "histogram_mode", "localsimple_taures", "sampenc",
-                       "spreadrandomlocal_meantaul")
+                       "histogram_mode", "localsimple_taures", "sampenc")
       y <- as.data.table(tsfeatures::tsfeatures(data[, get(price)], features = featureList))
       colnames(y) <- paste(colnames(y), window, sep = "_")
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
