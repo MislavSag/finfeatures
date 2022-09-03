@@ -2,11 +2,8 @@
 #' @import checkmate
 #' @import TTR
 #' @import runner
-#' @import parallel
 #' @import reticulate
 #' @import RollingWindow
-#' @import mlr3misc
-#' @import cpm
 #' @import lgr
 #' @import doParallel
 #' @importFrom R6 R6Class is.R6

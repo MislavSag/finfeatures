@@ -333,7 +333,7 @@ OhlcvFeatures = R6::R6Class(
       # change points roll
       detectiontimes <- numeric()
       changepoints <- numeric()
-      cpm <- makeChangePointModel(cpmType=method, ARL0=arl0, startup=200)
+      cpm <- cpm::makeChangePointModel(cpmType=method, ARL0=arl0, startup=200)
       i <- 0
       while (i < length(returns)) {
 
@@ -345,14 +345,14 @@ OhlcvFeatures = R6::R6Class(
         }
 
         # process each observation in turn
-        cpm <- processObservation(cpm, returns[i])
+        cpm <- cpm::processObservation(cpm, returns[i])
 
         # if a change has been found, log it, and reset the CPM
         if (changeDetected(cpm) == TRUE) {
           detectiontimes <- c(detectiontimes,i)
 
           # the change point estimate is the maximum D_kt statistic
-          Ds <- getStatistics(cpm)
+          Ds <- cpm::getStatistics(cpm)
           tau <- which.max(Ds)
           if (length(changepoints) > 0) {
             tau <- tau + changepoints[length(changepoints)]
@@ -360,7 +360,7 @@ OhlcvFeatures = R6::R6Class(
           changepoints <- c(changepoints,tau)
 
           # reset the CPM
-          cpm <- cpmReset(cpm)
+          cpm <- cpm::cpmReset(cpm)
 
           #resume monitoring from the observation following the change point
           i <- tau
