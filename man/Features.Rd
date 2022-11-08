@@ -2,37 +2,30 @@
 % Please edit documentation in R/Features.R
 \name{Features}
 \alias{Features}
-\title{Features Class}
+\title{Features Set}
 \arguments{
-\item{ohlcv_object}{Length of window for calculating rolling versions of the indicators.}
-
-\item{at}{Argument `at` in runner package}
-
-\item{lag}{Argument `lag` in runner package}
+\item{features_config}{AWS S3 Tiledb config}
 
 \item{data}{X field of Ohlcv object}
 
-\item{window}{window length. This argument is given internaly}
+\item{x}{List}
+
+\item{FUN}{function to apply}
 }
 \value{
 A new `Features` object.
 
-Data.table with new features.
+Calculate rolling features from forecasting package.
+
+Calculate rolling features from forecasting package.
 }
 \description{
-Calculates all features for financial time series forecasting.
+Calculate features specified in config file.
 
-Create a new OhlcvFeatures object.
+Create a new Features object.
 
-Function calculates basic features from OHLCV financial data
+Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+
+Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+https://stackoverflow.com/questions/38950005/how-to-manipulate-null-elements-in-a-nested-list/
 }
-\section{Fields}{
-
-\describe{
-\item{\code{ohlcv_object}}{OHLCV object}
-
-\item{\code{at}}{Argument `at` in runner package}
-
-\item{\code{lag}}{Argument `lag` in runner package}
-}}
-

@@ -1,0 +1,20 @@
+RollingExuber:
+ windows :
+  - 50
+  - 100
+ workers : 4
+ lag : 1
+ at : NULL
+ na_pad: TRUE
+ simplify: FALSE
+ exuber_lag: 0
+RollingForecasts:
+ windows :
+  - 252
+ workers : 4
+ lag : 1
+ at : NULL
+ na_pad: TRUE
+ simplify: FALSE
+ forecast_type: "autoarima"
+ h: 10

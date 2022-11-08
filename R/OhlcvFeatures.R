@@ -198,113 +198,26 @@ OhlcvFeatures = R6::R6Class(
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
       # support / resistance
-      # ohlcv[, close_round := round(close, 0)]
-      # windows__ <- unique(c(windows_, 200, 500))
-      # new_cols <- paste0("rolling_mode_", windows__)
-      # # x <- scale(ohlcv$close_round)
-      # # plot(x)
-      # ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
-      #   as.integer(names(sort(table(x), decreasing = TRUE))[1])
-      #   # TODO: faster way sto calculate mode: https://stackoverflow.com/questions/55212746/rcpp-fast-statistical-mode-function-with-vector-input-of-any-type
-      # })), by = symbol]
-      # new_cols_close <- paste0(new_cols, "_ratio")
-      # ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
-
-      # TODO: support / resistance VWA
-      # new_cols_ <- paste0("rolling_mode_vma_", windows__)
-      # ohlcv[, (new_cols_) := lapply(.SD, function(w) TTR::VWAP(w, volume, 10)), by = symbol, .SDcols = new_cols]
-
-      # ohlcv[, rolling_mode_200_vwa := TTR::VWAP(rolling_mode_200, volume, 200)]
-      # ohlcv[, rolling_mode_500_vwa := TTR::VWAP(rolling_mode_500, volume, 500)]
-
-      # price / support / resistance
-      # ohlcv[, rolling_mode_40_close := (close / rolling_mode_40) - 1]
-      # ohlcv[, rolling_mode_200_close := (close / rolling_mode_200) - 1]
-      # ohlcv[, rolling_mode_500_close := (close / rolling_mode_500) - 1]
-      # ohlcv[, rolling_mode_200_vma_close := (close / rolling_mode_200_vwa) - 1]
-      # ohlcv[, rolling_mode_500_vma_close := (close / rolling_mode_500_vwa) - 1]
-
-      ####### DEBUG #######
-      # library(ggplot2)
-      # ggplot(ohlcv[30000:nrow(ohlcv)], aes(x = date)) +
-      #   geom_line(aes(y = close)) +
-      #   geom_line(aes(y = rolling_mode_40), color = "red") +
-      #   geom_line(aes(y = rolling_mode_176), color = "green") +
-      #   geom_line(aes(y = rolling_mode_200), color = "blue") +
-      #   geom_line(aes(y = rolling_mode_500), color = "brown")
-      #
-      # ggplot(ohlcv[20000:nrow(ohlcv)], aes(x = date)) +
-      #   geom_line(aes(y = close)) +
-      #   geom_line(aes(y = rolling_mode_500), color = "brown") +
-      #   geom_line(aes(y = rolling_mode_500_vwa), color = "blue")
-      # ggplot(ohlcv[20000:nrow(ohlcv)], aes(x = date)) +
-      #   geom_line(aes(y = close)) +
-      #   geom_line(aes(y = rolling_mode_200), color = "brown") +
-      #   geom_line(aes(y = rolling_mode_200_vwa), color = "blue")
-      # ggplot(ohlcv[30000:nrow(ohlcv)], aes(x = date)) +
-      #   geom_line(aes(y = close)) +
-      #   geom_line(aes(y = rolling_mode_500), color = "brown") +
-      #   geom_line(aes(y = rolling_mode_500_vwa), color = "blue")
-      #
-      # # backtest
-      # dates_ <- ohlcv$date
-      # returns_ <- ohlcv$returns_1
-      # indicator_ <- ohlcv$rolling_mode_200_vma_close
-      #
-      # backtest <- function(returns, indicator, threshold, return_cumulative = TRUE) {
-      #   sides <- vector("integer", length(indicator))
-      #   for (i in seq_along(sides)) {
-      #     if (i == 1 || is.na(indicator[i-1])) {
-      #       sides[i] <- NA
-      #     } else if (indicator[i-1] < threshold) {
-      #       sides[i] <- 0
-      #     } else {
-      #       sides[i] <- 1
-      #     }
-      #   }
-      #   sides <- ifelse(is.na(sides), 1, sides)
-      #   returns_strategy <- returns * sides
-      #   if (return_cumulative) {
-      #     return(PerformanceAnalytics::Return.cumulative(returns_strategy))
-      #   } else {
-      #     return(returns_strategy)
-      #   }
-      # }
-      #
-      # x <- backtest(returns_, indicator_, 0, return_cumulative = FALSE)
-      # data_ <- cbind(benchmark = ohlcv$returns_1, strategy = xts::xts(x, order.by = dates_))
-      # data_ <- na.omit(data_)
-      # PerformanceAnalytics::charts.PerformanceSummary(data_)
-      #
-      # # backtest performance
-      # Performance <- function(x) {
-      #   cumRetx = Return.cumulative(x)
-      #   annRetx = Return.annualized(x, scale=252 * 8)
-      #   sharpex = SharpeRatio.annualized(x, scale=252 * 8)
-      #   winpctx = length(x[x > 0])/length(x[x != 0])
-      #   annSDx = sd.annualized(x, scale=252 * 8)
-      #
-      #   DDs <- findDrawdowns(x)
-      #   maxDDx = min(DDs$return)
-      #   maxLx = max(DDs$length)
-      #
-      #   Perf = c(cumRetx, annRetx, sharpex, winpctx, annSDx, maxDDx, maxLx)
-      #   names(Perf) = c("Cumulative Return", "Annual Return","Annualized Sharpe Ratio",
-      #                   "Win %", "Annualized Volatility", "Maximum Drawdown", "Max Length Drawdown")
-      #   return(Perf)
-      # }
-      #
-      # library(PerformanceAnalytics)
-      # Performance(data_$strategy)
-      # Performance(data_$benchmark)
-      ####### DEBUG #######
-
+      ohlcv[, close_round := round(close, 0)]
+      windows__ <- unique(c(windows_, 200, 500))
+      new_cols <- paste0("rolling_mode_", windows__)
+      baseMode <- function(x, narm = FALSE) {
+        if (narm) x <- x[!is.na(x)]
+        ux <- unique(x)
+        ux[which.max(table(match(x, ux)))]
+      }
+      ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
+        baseMode(x)
+      })), by = symbol]
+      new_cols_close <- paste0(new_cols, "_ratio")
+      ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
+      ohlcv[, close_round := NULL]
+      ohlcv[, (new_cols) := NULL]
 
       # estimate changepoints breaks
-      # for (i in c(370, 500, 1000, 5000)) {
-      #   # ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
-      #   ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
-      # }
+      for (i in c(370, 500, 1000, 5000)) {
+        ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
+      }
 
       # keep only relevant columns
       if (!is.null(at_)) {
@@ -369,71 +282,10 @@ OhlcvFeatures = R6::R6Class(
       points <- cbind.data.frame(detectiontimes, changepoints)
       breaks <- rep(FALSE, length(returns))
       breaks[detectiontimes] <- TRUE
-      change <- rep(FALSE, length(returns))
-      change[changepoints] <- TRUE
-      return(cbind.data.frame(breaks, change))
+      # change <- rep(FALSE, length(returns))
+      # change[changepoints] <- TRUE
+      # return(cbind.data.frame(breaks, change))
+      return(breaks)
     }
   )
 )
-
-# timeSeries = ohlcv$close[1:1000]
-# tolerance=0.01
-# nChunks=10
-# nPoints=3
-# plotChart=TRUE
-# detectSupportResistance <- function(timeSeries, tolerance=0.01, nChunks=10, nPoints=3, plotChart=TRUE)
-# {
-#   # detect maximums and minimums
-#   N = length(timeSeries)
-#   stp = floor(N / nChunks)
-#   minz = array(0.0, dim=nChunks)
-#   whichMinz = array(0, dim=nChunks)
-#   maxz = array(0.0, dim=nChunks)
-#   whichMaxz = array(0, dim=nChunks)
-#   for(j in 1:(nChunks-1)) {
-#     lft = (j-1)*stp + 1  #left and right elements of each chunk
-#     rght = j*stp
-#     whichMinz[j] = which.min(timeSeries[lft:rght]) + lft
-#     minz[j] = min(timeSeries[lft:rght])
-#     whichMaxz[j] = which.max(timeSeries[lft:rght]) + lft
-#     maxz[j] = max(timeSeries[lft:rght])
-#   }
-#   # last chunk
-#   lft = j*stp + 1  #left and right elements of each chunk
-#   rght = N
-#   whichMinz[nChunks] = which.min(timeSeries[lft:rght]) + lft
-#   minz[nChunks] = min(timeSeries[lft:rght])
-#   whichMaxz[nChunks] = which.max(timeSeries[lft:rght]) + lft
-#   maxz[nChunks] = max(timeSeries[lft:rght])
-#
-#   result = list()
-#   result[["minima"]] = NULL
-#   result[["minimaAt"]] = NULL
-#   result[["maxima"]] = NULL
-#   result[["maximaAt"]] = NULL
-#   span = tolerance * (max(maxz) - min(minz))
-#
-#   rang = order(minz)[1:nPoints]
-#   if((minz[rang[nPoints]] - minz[rang[1]]) <= span) {
-#     result[["minima"]] = minz[rang[1:nPoints]]
-#     result[["minimaAt"]] = whichMinz[rang[1:nPoints]]
-#   }
-#
-#   rang = order(maxz, decreasing = TRUE)[1:nPoints]
-#   if((maxz[rang[1]] - maxz[rang[nPoints]]) <= span) {
-#     result[["maxima"]] = maxz[rang[1:nPoints]]
-#     result[["maximaAt"]] = whichMaxz[rang[1:nPoints]]
-#   }
-#
-#   if(plotChart) {
-#     ts.plot(timeSeries)
-#     points(whichMinz, minz, col="blue")
-#     points(whichMaxz, maxz, col="red")
-#     if(!is.null(result[["minima"]])  &&  !is.null(result[["minimaAt"]]))
-#       abline(lm(result[["minima"]] ~  result[["minimaAt"]]))
-#     if(!is.null(result[["maxima"]])  &&  !is.null(result[["maximaAt"]]))
-#       abline(lm(result[["maxima"]] ~  result[["maximaAt"]]))
-#   }
-#
-#   return(result)
-# }

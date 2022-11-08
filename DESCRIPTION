@@ -22,7 +22,9 @@ Imports:
     reticulate,
     future,
     RollingWindow,
-    QuantTools
+    QuantTools, 
+    yaml,
+    cpm
 Remotes:
     andrewuhl/RollingWindow,
     bitbucket::quanttools/quanttools
@@ -39,7 +41,6 @@ Suggests:
     backCUSUM,
     theft,
     WaveletArima,
-    cpm,
     roxygen2,
     devtools,
     knitr,

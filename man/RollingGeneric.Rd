@@ -25,6 +25,8 @@
 \item{price}{Prcie column in Ohlcv}
 
 \item{Ohlcv}{Ohlcv object}
+
+\item{log_prices}{If TRUE, we log OHLC.}
 }
 \value{
 A new `RollingGeneric` object.

@@ -71,9 +71,10 @@
       #' Helping function for calculating rolling features.
       #'
       #' @param Ohlcv Ohlcv object
+      #' @param log_prices If TRUE, we log OHLC.
       #'
       #' @return Depending on used classes for clalculating features. It returns df.
-      get_rolling_features = function(Ohlcv) {
+      get_rolling_features = function(Ohlcv, log_prices = FALSE) {
 
         installed <- all(sapply(self$packages, requireNamespace, quietly = TRUE))
 
@@ -84,7 +85,13 @@
         }
 
         # get data
-        data = Ohlcv$X
+        data = copy(Ohlcv$X)
+
+        # log
+        if (log_prices) {
+          cols <- c("open", "high", "low", "close")
+          data[, (cols) := lapply(.SD, log), .SDcols = cols]
+        }
 
         # start cluser if workers greater than 1
         if (self$workers > 1) {
@@ -101,7 +108,8 @@
         for (i in 1:length(self$windows)) {
           rolling_features = runner(
             x = data,
-            f = function(x) self$rolling_function(x, self$windows[i], Ohlcv$price),
+            f = function(x) self$rolling_function(x, self$windows[i],
+                                                  copy(Ohlcv$price)),
             k = self$windows[i],
             lag = self$lag,
             at = self$at,
@@ -123,6 +131,13 @@
                                                         all.x = TRUE, all.y = TRUE),
                                    data_list)
         colnames(data_all_windows) <- gsub(" |-", "_", colnames(data_all_windows))
+
+        # add log to colnames if used
+        if (log_prices) {
+          colnames(data_all_windows)[3:ncol(data_all_windows)] <- paste0(colnames(data_all_windows)[3:ncol(data_all_windows)],
+                                                                         "_log")
+        }
+
         return(data_all_windows)
       }
     )

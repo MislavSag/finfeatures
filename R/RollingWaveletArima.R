@@ -92,7 +92,7 @@ RollingWaveletArima = R6::R6Class(
       }
 
       # calculate arima forecasts
-      y <- WaveletArima::WaveletFittingarma(ts = data$returns,
+      y <- WaveletArima::WaveletFittingarma(ts = na.omit(data$returns),
                                             filter = self$filter,
                                             Waveletlevels = floor(log(length(data$returns))),
                                             MaxARParam = self$MaxARParam,

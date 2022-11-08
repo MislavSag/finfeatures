@@ -51,7 +51,7 @@ data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 #arima
 RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
-                                              workers = 2L,
+                                              workers = 1L,
                                               lag = 1L,
                                               at = c(100:110, 200:210),
                                               na_pad = TRUE,

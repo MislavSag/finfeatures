@@ -6,6 +6,8 @@
 #' @import RollingWindow
 #' @import lgr
 #' @import doParallel
+#' @import yaml
+#' @import cpm
 #' @importFrom R6 R6Class is.R6
 #' @importFrom parallel makeCluster clusterExport clusterCall stopCluster
 #' @importFrom utils data head tail getFromNamespace
