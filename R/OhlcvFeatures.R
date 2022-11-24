@@ -61,6 +61,8 @@ OhlcvFeatures = R6::R6Class(
       # library(finfeatures)
       # library(checkmate)
       # library(TTR)
+      # library(RollingWindow)
+      # library(QuantTools)
       # ohlcv <- as.data.table(stocks)
       # windows_ = c(8 * 5, 8 * 22)
       # at_ <- c(500, 1000)
@@ -97,20 +99,20 @@ OhlcvFeatures = R6::R6Class(
       # whole number discrepancy
       ohlcv$pretty_1 <- sapply(ohlcv$close, function(x) pretty(x)[1])
       ohlcv$pretty_2 <- sapply(ohlcv$close, function(x) pretty(x)[2])
+      ohlcv[, pretty_1 := ifelse(pretty_1 <= 0, 0.01, pretty_1)]
       ohlcv[, close_round_div_down := (close - pretty_1) / pretty_1]
       ohlcv[, close_round_div_up := (close - pretty_2) / pretty_2]
       ohlcv[, `:=`(pretty_1 = NULL, pretty_2 = NULL)]
 
       # returns
-      new_cols <- paste0("returns_", c(1, windows_))
-      ohlcv[, (new_cols) := lapply(c(1, windows_), function(w) close / shift(close, n = w) - 1), by = symbol]
+      new_cols <- paste0("returns_", c(1:3, windows_))
+      ohlcv[, (new_cols) := lapply(c(1:3, windows_), function(w) close / shift(close, n = w) - 1), by = symbol]
 
       # rolling volatility
       new_cols <- paste0("sd_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
 
       # Close-to-Close Volatility
-      new_cols <- paste0("sd_close_", windows_)
       new_cols <- paste0("sd_parkinson_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) volatility(cbind(open, high, low, close), n = w, calc = "parkinson")),
             by = symbol]
@@ -142,6 +144,31 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(BBands(close, n = w)))), by = symbol]
       new_cols_change <- new_cols[grep("up|mavg|dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) (close - x) / x), .SDcols = new_cols_change]
+      # ADX
+      new_cols <- expand.grid("adx", c("dip", "din", "dx", "adx"), windows_)
+      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))), by = symbol]
+      # CCI
+      new_cols <- paste0("cci_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) CCI(cbind(high, low, close), n = w)), by = symbol]
+      # OBV
+      new_cols <- paste0("obv_", windows_[1])
+      ohlcv[, (new_cols) := lapply(windows_[1], function(w) OBV(close, volume)), by = symbol]
+      # SAR
+      new_cols <- paste0("sar_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(SAR(cbind(high, close)))), by = symbol]
+      # WPR
+      new_cols <- paste0("wpr_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) WPR(cbind(high, low, close))), by = symbol]
+      # AROON
+      new_cols <- expand.grid("aroon", c("aroonUp", "aroonDn", "oscillator"), windows_)
+      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(aroon(cbind(high, low), n = w)))), by = symbol]
+      # chaikinAD
+      new_cols <- paste0("chaikinad_", windows_[1])
+      ohlcv[, (new_cols) := lapply(windows_[1], function(w) chaikinAD(cbind(high, low, close), volume)), by = symbol]
+
+      # tail(TTR::(ohlcv[, .(high, low, close)], ohlcv$volume))
 
       # percent rand
       new_cols <- paste0("percent_rank_", windows_)
@@ -164,8 +191,8 @@ OhlcvFeatures = R6::R6Class(
       # rolling volume
       # new_cols <- paste0("volume_", windows_)
       # ohlcv[, (new_cols) := lapply(windows_, function(w) frollmean(volume / 1000, n = w, na.rm = TRUE)), by = symbol]
-      new_cols <- paste0("volume_rate_", windows_)
-      ohlcv[, (new_cols) := lapply(windows_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
+      new_cols <- paste0("volume_rate_", c(1:3, windows_))
+      ohlcv[, (new_cols) := lapply(c(1:3, windows_), function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
       # rolling linear regression model: y = 1 + date + e NOT THAT GOOD AFTER ALL ?
       new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
@@ -198,7 +225,7 @@ OhlcvFeatures = R6::R6Class(
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
       # support / resistance
-      ohlcv[, close_round := round(close, 0)]
+      ohlcv[, close_round := round(close, 1)]
       windows__ <- unique(c(windows_, 200, 500))
       new_cols <- paste0("rolling_mode_", windows__)
       baseMode <- function(x, narm = FALSE) {
@@ -206,6 +233,7 @@ OhlcvFeatures = R6::R6Class(
         ux <- unique(x)
         ux[which.max(table(match(x, ux)))]
       }
+      baseMode(ohlcv$close[1:200])
       ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
         baseMode(x)
       })), by = symbol]
@@ -216,7 +244,7 @@ OhlcvFeatures = R6::R6Class(
 
       # estimate changepoints breaks
       for (i in c(370, 500, 1000, 5000)) {
-        ohlcv[, paste(c('breaks', 'changes'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
+        ohlcv[, paste(c('breaks'), i, sep = '_') := self$get_changepoints(returns, method = 'Mood', i), by = .(symbol)]
       }
 
       # keep only relevant columns
