@@ -98,9 +98,9 @@ RollingFracdiff = R6::R6Class(
 
       # calculate d
       ds <- lapply(bandw_exp, function(be) {
-        fdGPH_ <- as.data.frame(fdGPH(price, bandw.exp = be))
+        fdGPH_ <- as.data.frame(fracdiff::fdGPH(price, bandw.exp = be))
         colnames(fdGPH_) <- paste0(colnames(fdGPH_), "_fdGPH_", be)
-        fdSperio_ <- as.data.frame(fdSperio(price, bandw.exp = be, beta = 0.9))
+        fdSperio_ <- as.data.frame(fracdiff::fdSperio(price, bandw.exp = be, beta = 0.9))
         colnames(fdSperio_) <- paste0(colnames(fdSperio_), "_fdSperio_", be)
         cbind(fdGPH_, fdSperio_)
       })
