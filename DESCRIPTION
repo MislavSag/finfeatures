@@ -41,6 +41,7 @@ Suggests:
     backCUSUM,
     theft,
     WaveletArima,
+    binomialtrend,
     roxygen2,
     devtools,
     knitr,

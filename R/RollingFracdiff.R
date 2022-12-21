@@ -88,7 +88,7 @@ RollingFracdiff = R6::R6Class(
       # calculate arfima coefficitents
       # price <- spy_hour$close[1:5000]
       fitted <- lapply(seq_along(nar), function(i) {
-        fracdiff::fracdiff(price, nar = nar[i], nma = nma[i])
+        fracdiff::fracdiff(data[, get(price)], nar = nar[i], nma = nma[i])
       })
       fitted_coefs <- lapply(fitted, coef)
       for (i in seq_along(fitted_coefs)) {
@@ -98,9 +98,9 @@ RollingFracdiff = R6::R6Class(
 
       # calculate d
       ds <- lapply(bandw_exp, function(be) {
-        fdGPH_ <- as.data.frame(fracdiff::fdGPH(price, bandw.exp = be))
+        fdGPH_ <- as.data.frame(fracdiff::fdGPH(data[, get(price)], bandw.exp = be))
         colnames(fdGPH_) <- paste0(colnames(fdGPH_), "_fdGPH_", be)
-        fdSperio_ <- as.data.frame(fracdiff::fdSperio(price, bandw.exp = be, beta = 0.9))
+        fdSperio_ <- as.data.frame(fracdiff::fdSperio(data[, get(price)], bandw.exp = be, beta = 0.9))
         colnames(fdSperio_) <- paste0(colnames(fdSperio_), "_fdSperio_", be)
         cbind(fdGPH_, fdSperio_)
       })

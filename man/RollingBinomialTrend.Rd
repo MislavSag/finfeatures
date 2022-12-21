@@ -38,12 +38,20 @@ Function calculates trend, p-value features from binomialtrend on rolling window
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 RollingBinomialTrendInit = RollingBinomialTrend$new(windows = 200,
-                                            workers = 1L,
-                                            at = c(300, 500),
-                                            lag = 0L,
+                                                    workers = 1L,
+                                                    at = c(300, 500),
+                                                    lag = 0L,
+                                                    na_pad = TRUE,
+                                                    simplify = FALSE)
+x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
+head(x)
+# multiple windows and parallel
+RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
+                                            workers = 8L,
+                                            at = c(300:315),
+                                            lag = 1L,
                                             na_pad = TRUE,
                                             simplify = FALSE)
 x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 head(x)
-# multiple windows and parallel
 }
