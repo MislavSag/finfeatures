@@ -50,7 +50,8 @@ RollingExuberInit = RollingExuber$new(windows = 200,
                                       at = c(300:310, 500:510),
                                       lag = 1L,
                                       na_pad = TRUE,
-                                      simplify = FALSE)
+                                      simplify = FALSE,
+                                      exuber_lag = 1)
 x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 head(x)
 # parallel and multiple windows

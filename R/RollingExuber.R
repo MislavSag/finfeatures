@@ -12,7 +12,8 @@
 #'                                       at = c(300:310, 500:510),
 #'                                       lag = 1L,
 #'                                       na_pad = TRUE,
-#'                                       simplify = FALSE)
+#'                                       simplify = FALSE,
+#'                                       exuber_lag = 1)
 #' x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 #' # parallel and multiple windows
@@ -83,7 +84,7 @@ RollingExuber = R6::R6Class(
       # library(finfeatures)
       # data(spy_hour)
       # x <- spy_hour$close[1:600]
-      # exuber::radf(x, lag = self$exuber_lag, minw = psy_minw(window))
+      # y <- exuber::radf(x, lag = 1, minw = exuber:::psy_minw(600))
 
       y <- tryCatch(exuber::radf(data[, get(price)],
                                  lag = self$exuber_lag,
@@ -93,7 +94,8 @@ RollingExuber = R6::R6Class(
         return(NULL)
       } else {
         stats <- exuber::tidy(y)
-        bsadf <- data.table::last(exuber::augment(y))[, 4:5]
+        bsadf <- data.table::last(exuber::augment(y))
+        bsadf <- bsadf[, (ncol(bsadf)-1):ncol(bsadf)]
         result <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], stats, bsadf)
         result$id <- NULL
         colnames(result)[3:ncol(result)] <- paste("exuber", window, self$exuber_lag, colnames(result)[3:ncol(result)], sep = "_")
