@@ -7,22 +7,22 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingBackcusumInit = RollingBinomialTrend$new(windows = 200,
+#' RollingBinomialTrendInit = RollingBinomialTrend$new(windows = 200,
 #'                                             workers = 1L,
 #'                                             at = c(300, 500),
 #'                                             lag = 0L,
 #'                                             na_pad = TRUE,
 #'                                             simplify = FALSE)
-#' x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
+#' x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 #' # multiple windows and parallel
-# RollingBackcusumInit = RollingBinomialTrend$new(windows = c(22, 66),
+# RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
 #                                             workers = 8L,
 #                                             at = c(300:315),
 #                                             lag = 1L,
 #                                             na_pad = TRUE,
 #                                             simplify = FALSE)
-# x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
+# x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 # head(x)
 RollingBinomialTrend = R6::R6Class(
   "RollingBinomialTrend",
@@ -75,8 +75,10 @@ RollingBinomialTrend = R6::R6Class(
       
       # calculate arima forecasts
       y <- na.omit(data$returns)
-      y <- binomialtrend::binomialtrend
+      y <- binomialtrend::binomialtrend(y)
+    
       results <- c(y$parameter, y$p.value)
+
       names(results) <- c("trend", "p-value")
       results <- as.data.table(as.list(results))
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], results)
