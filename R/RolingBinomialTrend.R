@@ -1,7 +1,7 @@
 #' @title RollingBinomialTrend Class
 #'
 #' @description
-#' Function calculates backCUSUM tests on rolling window from backCUSUM pakcage.
+#' Function calculates trend and p-value from  binomialtrend package
 #'
 #' @export
 #' @examples
@@ -58,13 +58,13 @@ RollingBinomialTrend = R6::R6Class(
     
     
     #' @description
-    #' Function calculates radf values from exuber package on rolling window.
+    #' Function calculates trend, p-value features from binomialtrend on rolling window.
     #'
     #' @param data X field of Ohlcv object
     #' @param window window length. This argument is given internaly
     #' @param price Price column in Ohlcv
     #'
-    #' @return Calculate rolling radf features from backCUSUM package.
+    #' @return Calculate rolling trend, p-value features from binomialtrend package.
     rolling_function = function(data, window, price) {
       
       # check if there is enough data
@@ -74,7 +74,7 @@ RollingBinomialTrend = R6::R6Class(
       }
       
       # calculate arima forecasts
-      y <- na.omit(data$returns)
+      y <- na.omit(data$close)
       y <- binomialtrend::binomialtrend(y)
     
       results <- c(y$parameter, y$p.value)
