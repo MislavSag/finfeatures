@@ -8,29 +8,29 @@
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 #' RollingBinomialTrendInit = RollingBinomialTrend$new(windows = 200,
-#'                                             workers = 1L,
-#'                                             at = c(300, 500),
-#'                                             lag = 0L,
+#'                                                     workers = 1L,
+#'                                                     at = c(300, 500),
+#'                                                     lag = 0L,
+#'                                                     na_pad = TRUE,
+#'                                                     simplify = FALSE)
+#' x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' # multiple windows and parallel
+#' RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
+#'                                             workers = 8L,
+#'                                             at = c(300:315),
+#'                                             lag = 1L,
 #'                                             na_pad = TRUE,
 #'                                             simplify = FALSE)
 #' x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-#' # multiple windows and parallel
-# RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
-#                                             workers = 8L,
-#                                             at = c(300:315),
-#                                             lag = 1L,
-#                                             na_pad = TRUE,
-#                                             simplify = FALSE)
-# x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
-# head(x)
 RollingBinomialTrend = R6::R6Class(
   "RollingBinomialTrend",
   inherit = RollingGeneric,
-  
-  
+
+
   public = list(
-    
+
     #' @description
     #' Create a new RollingBinomialTrend object.
     #'
@@ -43,7 +43,7 @@ RollingBinomialTrend = R6::R6Class(
     #'
     #' @return A new `RollingBinomialTrend` object.
     initialize = function(windows, workers, lag, at, na_pad, simplify) {
-      
+
       # super init
       super$initialize(
         windows,
@@ -55,8 +55,8 @@ RollingBinomialTrend = R6::R6Class(
         private$packages
       )
     },
-    
-    
+
+
     #' @description
     #' Function calculates trend, p-value features from binomialtrend on rolling window.
     #'
@@ -66,17 +66,18 @@ RollingBinomialTrend = R6::R6Class(
     #'
     #' @return Calculate rolling trend, p-value features from binomialtrend package.
     rolling_function = function(data, window, price) {
-      
+
       # check if there is enough data
       if (length(unique(data$symbol)) > 1) {
         print(paste0("not enough data for symbol ", data$symbol[1]))
         return(NA)
       }
-      
+
       # calculate arima forecasts
-      y <- na.omit(data$close)
+      # price <- spy_hour$close[1:200]
+      y <- na.omit(data[, get(price)])
       y <- binomialtrend::binomialtrend(y)
-    
+
       results <- c(y$parameter, y$p.value)
 
       names(results) <- c("trend", "p-value")
@@ -86,7 +87,7 @@ RollingBinomialTrend = R6::R6Class(
       return(results)
     }
   ),
-  
+
   private = list(
     packages = "binomialtrend"
   )
