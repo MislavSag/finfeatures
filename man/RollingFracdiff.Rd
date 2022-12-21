@@ -53,15 +53,13 @@ Function calculates forecastas based on auto.arima and nnetar functions from for
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#arima
-RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
+# fracdiff arima
+RollingFracdiffInstance = RollingFracdiff$new(windows = c(10, 20),
                                               workers = 1L,
                                               lag = 1L,
                                               at = c(100:110, 200:210),
                                               na_pad = TRUE,
-                                              simplify = FALSE,
-                                              forecast_type = "autoarima",
-                                              h = 22)
-x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
+                                              simplify = FALSE)
+x = RollingFracdiffInstance$get_rolling_features(OhlcvInstance)
 head(x)
 }

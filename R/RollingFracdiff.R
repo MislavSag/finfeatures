@@ -7,16 +7,14 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' #arima
-#' RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
+#' # fracdiff arima
+#' RollingFracdiffInstance = RollingFracdiff$new(windows = c(10, 20),
 #'                                               workers = 1L,
 #'                                               lag = 1L,
 #'                                               at = c(100:110, 200:210),
 #'                                               na_pad = TRUE,
-#'                                               simplify = FALSE,
-#'                                               forecast_type = "autoarima",
-#'                                               h = 22)
-#' x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
+#'                                               simplify = FALSE)
+#' x = RollingFracdiffInstance$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingFracdiff = R6::R6Class(
   "RollingFracdiff",
@@ -51,7 +49,7 @@ RollingFracdiff = R6::R6Class(
                           nar = c(1, 2), nma = c(1, 2), bandw_exp = c(0.1, 0.5, 0.9)) {
 
       # checks
-      if (length(nar) != length(nam)) stop("nar and nam must be of the same length")
+      if (length(nar) != length(nma)) stop("nar and nam must be of the same length")
 
       # parameters
       self$nar = nar
@@ -87,8 +85,8 @@ RollingFracdiff = R6::R6Class(
 
       # calculate arfima coefficitents
       # price <- spy_hour$close[1:5000]
-      fitted <- lapply(seq_along(nar), function(i) {
-        fracdiff::fracdiff(data[, get(price)], nar = nar[i], nma = nma[i])
+      fitted <- lapply(seq_along(self$nar), function(i) {
+        fracdiff::fracdiff(data[, get(price)], nar = self$nar[i], nma = self$nma[i])
       })
       fitted_coefs <- lapply(fitted, coef)
       for (i in seq_along(fitted_coefs)) {
@@ -97,7 +95,7 @@ RollingFracdiff = R6::R6Class(
       vars <- do.call(c, fitted_coefs)
 
       # calculate d
-      ds <- lapply(bandw_exp, function(be) {
+      ds <- lapply(self$bandw_exp, function(be) {
         fdGPH_ <- as.data.frame(fracdiff::fdGPH(data[, get(price)], bandw.exp = be))
         colnames(fdGPH_) <- paste0(colnames(fdGPH_), "_fdGPH_", be)
         fdSperio_ <- as.data.frame(fracdiff::fdSperio(data[, get(price)], bandw.exp = be, beta = 0.9))

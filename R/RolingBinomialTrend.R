@@ -17,11 +17,11 @@
 #' head(x)
 #' # multiple windows and parallel
 #' RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
-#'                                             workers = 8L,
-#'                                             at = c(300:315),
-#'                                             lag = 1L,
-#'                                             na_pad = TRUE,
-#'                                             simplify = FALSE)
+#'                                                     workers = 2L,
+#'                                                     at = c(300:315),
+#'                                                     lag = 1L,
+#'                                                     na_pad = TRUE,
+#'                                                     simplify = FALSE)
 #' x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingBinomialTrend = R6::R6Class(
