@@ -76,7 +76,7 @@ RollingBinomialTrend = R6::R6Class(
       # calculate arima forecasts
       y <- na.omit(data$returns)
       y <- binomialtrend::binomialtrend
-      results <- c(y$parameter, $p.value)
+      results <- c(y$parameter, y$p.value)
       names(results) <- c("trend", "p-value")
       results <- as.data.table(as.list(results))
       results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], results)
