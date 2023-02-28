@@ -12,29 +12,27 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{features_set}{Argument from the theft package}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingTheft` object.
 
-Calculate rolling radf features from theft package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates catch 22 features on rolling window.
 
 Create a new RollingExuber object.
 
-Function calculates catch 22 features on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -50,9 +48,15 @@ RollingTheftInit = RollingTheft$new(windows = 200,
                                     workers = 1L,
                                     at = c(300, 500),
                                     lag = 0L,
-                                    na_pad = TRUE,
-                                    simplify = FALSE,
                                     features_set = "catch22")
+x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+head(x)
+# parallel and multiple windows and vector argument
+RollingTheftInit = RollingTheft$new(windows = 200,
+                                    workers = 2L,
+                                    at = c(300, 500),
+                                    lag = 0L,
+                                    features_set = c("catch22", "feasts"))
 x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

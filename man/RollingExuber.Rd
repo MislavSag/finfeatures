@@ -12,17 +12,15 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{exuber_lag}{Exuber lag, see exuber package}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingExuber` object.
@@ -49,8 +47,6 @@ RollingExuberInit = RollingExuber$new(windows = 200,
                                       workers = 1L,
                                       at = c(300:310, 500:510),
                                       lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE,
                                       exuber_lag = 1)
 x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 head(x)
@@ -59,8 +55,7 @@ RollingExuberInit = RollingExuber$new(windows = c(200, 400),
                                       workers = 2L,
                                       at = c(300:310, 500:510),
                                       lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
+                                      exuber_lag = c(1, 2))
 x = RollingExuberInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

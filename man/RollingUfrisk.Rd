@@ -12,10 +12,6 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{a_v}{Argument a.v in ufRisk package}
 
 \item{a_e}{Argument a.e in ufRisk package}
@@ -24,23 +20,25 @@
 
 \item{garch_order}{Argument garch_order in ufRisk package}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingQuarks` object.
 
-Calculate rolling Var and ES features from ufRisk package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates risk measures (Var, ES) from ufRisk package on rolling window.
 
 Create a new RollingExuber object.
 
-Function calculates risk measures (Var, ES) from ufRisk package on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -59,19 +57,22 @@ data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 RollingUfriskInit = RollingUfrisk$new(windows = 200,
                                       workers = 1L,
-                                      at = c(300:310, 500:510),
-                                      lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
+                                      at = c(300, 500),
+                                      lag = 0L,
+                                      a_v = 0.99,
+                                      a_e = 0.975,
+                                      model = "sGARCH",
+                                      garch_order = c(1, 1))
 x = RollingUfriskInit$get_rolling_features(OhlcvInstance)
 head(x)
-# parallel and multiple windows
-RollingUfriskInit = RollingUfrisk$new(windows = c(200, 400),
+RollingUfriskInit = RollingUfrisk$new(windows = 200,
                                       workers = 2L,
-                                      at = c(300:310, 500:510),
-                                      lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
+                                      at = c(300, 500),
+                                      lag = 0L,
+                                      a_v = 0.99,
+                                      a_e = 0.975,
+                                      model = c("sGARCH", "eGARCH"),
+                                      garch_order = c(1, 1))
 x = RollingUfriskInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

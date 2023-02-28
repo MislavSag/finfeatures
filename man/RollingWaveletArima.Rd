@@ -12,10 +12,6 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{filter}{Wavelet filter use in the decomposition.}
 
 \item{Waveletlevels}{The level of wavelet decomposition.}
@@ -26,23 +22,25 @@
 
 \item{NForecast}{Forecast horizont.}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingForecats` object.
 
-Calculate rolling features from forecasting package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates forecastas based on WaveletArima package.
 
 Create a new RollingForecats object.
 
-Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -61,13 +59,18 @@ Function calculates forecastas based on auto.arima and nnetar functions from for
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingWaveletArimaInstance = RollingWaveletArima$new(windows = c(10, 20),
-                                                      workers = 2L,
-                                                      lag = 1L,
-                                                      at = c(100:110, 200:210),
-                                                      na_pad = TRUE,
-                                                      simplify = FALSE,
-                                                      filter = "haar")
-x = RollingWaveletArimaInstance$get_rolling_features(OhlcvInstance)
+RollingWaveletArimaInit = RollingWaveletArima$new(windows = 200,
+                                                  workers = 1L,
+                                                  at = c(300, 500),
+                                                  lag = 0L,
+                                                  filter = "haar")
+x = RollingWaveletArimaInit$get_rolling_features(OhlcvInstance)
+head(x)
+RollingWaveletArimaInit = RollingWaveletArima$new(windows = 200,
+                                                  workers = 2L,
+                                                  at = c(300, 500),
+                                                  lag = 0L,
+                                                  filter = c("haar", "la8"))
+x = RollingWaveletArimaInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

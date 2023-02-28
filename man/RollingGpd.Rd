@@ -12,30 +12,26 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{threshold}{Threshold parameter for returns. Returns below/above this threshold will be input.}
-
-\item{x}{vector of (filtered) returns}
 
 \item{hill_threshold}{look at ptsuite package}
 
 \item{suffix}{suffix for column names}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingGpd` object.
 
 Data.table with new features
 
-Calculate rolling features from ptsuite package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates GPD risk measures on rolling window from ptsuite pakcage.
@@ -44,7 +40,7 @@ Create a new RollingGpd object.
 
 Help function for calculating GPD features.
 
-Function calculates GPD risk measures on rolling window from ptsuite pakcage.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -59,18 +55,14 @@ RollingGpdInit = RollingGpd$new(windows = 200,
                                 workers = 1L,
                                 at = c(300, 500),
                                 lag = 0L,
-                                na_pad = TRUE,
-                                simplify = FALSE,
-                                threshold = 0.01)
+                                threshold = 0.03)
 x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 head(x)
 RollingGpdInit = RollingGpd$new(windows = 200,
                                 workers = 2L,
-                                at = c(300:310, 500:510),
+                                at = c(300, 500),
                                 lag = 0L,
-                                na_pad = TRUE,
-                                simplify = FALSE,
-                                threshold = 0.01)
+                                threshold = c(0,02, 0.03))
 x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

@@ -12,20 +12,22 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
+\item{alternative}{Check arguments of SBQ.test function in BackCUSUM package}
 
-\item{simplify}{Argument simplify in runner package.}
+\item{return_power}{Power returns by return_power.}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingBackcusum` object.
 
-Calculate rolling radf features from backCUSUM package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates backCUSUM tests on rolling window from backCUSUM pakcage.
@@ -34,6 +36,12 @@ Create a new RollingBackcusum object.
 
 Function calculates radf values from exuber package on rolling window.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{alternative}}{Check arguments of SBQ.test function in BackCUSUM package}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -41,9 +49,17 @@ RollingBackcusumInit = RollingBackcusum$new(windows = 200,
                                             workers = 1L,
                                             at = c(300, 500),
                                             lag = 0L,
-                                            na_pad = TRUE,
-                                            simplify = FALSE)
+                                            alternative = "greater",
+                                            return_power = 1)
 x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
 head(x)
 # multiple windows and parallel
+RollingBackcusumInit = RollingBackcusum$new(windows = c(22, 66),
+                                            workers = 2L,
+                                            at = c(300:315),
+                                            lag = 1L,
+                                            alternative = "greater",
+                                            return_power = c(1, 2))
+x = RollingBackcusumInit$get_rolling_features(OhlcvInstance)
+head(x)
 }

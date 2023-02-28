@@ -12,31 +12,29 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{forecast_type}{Type of time series forecasts.}
 
 \item{h}{Forecast horizont.}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingForecats` object.
 
-Calculate rolling features from forecasting package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
 
 Create a new RollingForecats object.
 
-Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -54,8 +52,6 @@ RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
                                               workers = 1L,
                                               lag = 1L,
                                               at = c(100:110, 200:210),
-                                              na_pad = TRUE,
-                                              simplify = FALSE,
                                               forecast_type = "autoarima",
                                               h = 22)
 x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
@@ -65,11 +61,8 @@ RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
                                               workers = 2L,
                                               lag = 1L,
                                               at = c(100:110, 200:210),
-                                              na_pad = TRUE,
-                                              simplify = FALSE,
-                                              forecast_type = "nnetar",
+                                              forecast_type = c("autoarima", "nnetar"),
                                               h = 10)
 x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 head(x)
-# ets
 }

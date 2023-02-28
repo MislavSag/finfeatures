@@ -12,28 +12,34 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
+\item{turbo}{Check argument in tvgarch function.}
 
-\item{simplify}{Argument simplify in runner package.}
+\item{x}{Ohlcv object.}
 
-\item{data}{X field of Ohlcv object}
+\item{window}{Rolling window lengths.}
 
-\item{window}{window length. This argument is given internaly}
+\item{price_col}{Prcie column in Ohlcv}
 
-\item{price}{Prcie column in Ohlcv}
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingGas` object.
 
-Calculate rolling tvgarch features from tvgarch package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
 
 Create a new RollingExuber object.
 
-Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{turbo}}{Check argument in tvgarch function.}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -41,8 +47,14 @@ RollingTvgarchInit = RollingTvgarch$new(windows = 200,
                                         workers = 1L,
                                         at = c(300, 500),
                                         lag = 0L,
-                                        na_pad = TRUE,
-                                        simplify = FALSE)
+                                        turbo = TRUE)
+x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
+head(x)
+RollingTvgarchInit = RollingTvgarch$new(windows = 200,
+                                        workers = 2L,
+                                        at = c(300, 500),
+                                        lag = 0L,
+                                        turbo = c(TRUE, FALSE))
 x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

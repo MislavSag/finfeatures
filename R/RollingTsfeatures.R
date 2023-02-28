@@ -11,8 +11,14 @@
 #'                                               workers = 1L,
 #'                                               at = c(300, 500),
 #'                                               lag = 0L,
-#'                                               na_pad = TRUE,
-#'                                               simplify = FALSE)
+#'                                               scale = TRUE)
+#' x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' RollingTsfeaturesInit = RollingTsfeatures$new(windows = 200,
+#'                                               workers = 2L,
+#'                                               at = c(300, 500),
+#'                                               lag = 0L,
+#'                                               scale = c(TRUE, FALSE))
 #' x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 # EROR: 8 nodes produced errors; first error: This time series is too short. Specify proper segment length in `l`
@@ -22,6 +28,9 @@ RollingTsfeatures = R6::R6Class(
 
   public = list(
 
+    #' @field scale Check argument of tsfeatures function.
+    scale = NULL,
+
     #' @description
     #' Create a new RollingTsfeatures object.
     #'
@@ -29,44 +38,44 @@ RollingTsfeatures = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
+    #' @param scale Check argument of tsfeatures function.
     #'
     #' @return A new `RollingTsfeatures` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify) {
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          scale) {
 
+      # define all params combination
+      private$params <- expand.grid(scale = scale, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("scale")
+
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates tsfeatures features on rolling window.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling tsfeatures features from tsfeatures package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
-
-      # DEBUG
-      # print(head(data))
-      # print(data[, get(price)])
-      # test_ <<- data[, get(price)]
-      # DEBUG
 
       # remove spreadrandomlocal_meantaul because of error:
       # This time series is too short. Specify proper segment length in `l`
@@ -79,20 +88,17 @@ RollingTsfeatures = R6::R6Class(
                        "nonlinearity", "pacf_features", "stability", "unitroot_kpss",
                        "unitroot_pp", "embed2_incircle", "firstzero_ac",
                        "histogram_mode", "localsimple_taures", "sampenc")
-      y <- as.data.table(tsfeatures::tsfeatures(data[, get(price)], features = featureList))
-      colnames(y) <- paste(colnames(y), window, sep = "_")
-      results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
-      colnames(results) <- gsub(" |-", "_", colnames(results))
-
-      ################## DEBUG ###############
-      # test__ <<- data[, get(price)]
-      ################## DEBUG ###############
-
-      results
+      y <- as.data.table(tsfeatures::tsfeatures(x[, get(price_col)],
+                                                features = featureList,
+                                                scale = params))
+      colnames(y) <- paste(colnames(y), window, params, sep = "_")
+      colnames(y) <- gsub(" |-", "_", colnames(y))
+      y
     }
   ),
 
   private = list(
-    packages = "tsfeatures"
+    packages = "tsfeatures",
+    params = NULL
   )
 )

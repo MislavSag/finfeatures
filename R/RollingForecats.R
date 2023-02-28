@@ -12,8 +12,6 @@
 #'                                               workers = 1L,
 #'                                               lag = 1L,
 #'                                               at = c(100:110, 200:210),
-#'                                               na_pad = TRUE,
-#'                                               simplify = FALSE,
 #'                                               forecast_type = "autoarima",
 #'                                               h = 22)
 #' x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
@@ -23,23 +21,10 @@
 #'                                               workers = 2L,
 #'                                               lag = 1L,
 #'                                               at = c(100:110, 200:210),
-#'                                               na_pad = TRUE,
-#'                                               simplify = FALSE,
-#'                                               forecast_type = "nnetar",
+#'                                               forecast_type = c("autoarima", "nnetar"),
 #'                                               h = 10)
 #' x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
 #' head(x)
-#' # ets
-# RollingForecatsInstance = RollingForecats$new(windows = c(10, 20),
-#                                               workers = 2L,
-#                                               lag = 1L,
-#                                               at = c(100:110, 200:210),
-#                                               na_pad = TRUE,
-#                                               simplify = FALSE,
-#                                               forecast_type = "ets",
-#                                               h = 10)
-# x = RollingForecatsInstance$get_rolling_features(OhlcvInstance)
-# head(x)
 RollingForecats = R6::R6Class(
   "RollingForecats",
   inherit = RollingGeneric,
@@ -59,58 +44,61 @@ RollingForecats = R6::R6Class(
     #' @param workers Number of threads.
     #' @param lag Argument lag in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param forecast_type Type of time series forecasts.
     #' @param h Forecast horizont.
     #'
     #' @return A new `RollingForecats` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify, forecast_type = c("autoarima", "nnetar", "ets"), h = 10) {
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          forecast_type = c("autoarima", "nnetar", "ets"),
+                          h = 10) {
 
-      # parameters
-      self$forecast_type = forecast_type
-      self$h = h
+      # define all params combination
+      private$params <- expand.grid(forecast_type = forecast_type,
+                                    h = h, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("forecast_type", "h")
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling features from forecasting package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
       # calculate arima forecasts
-      if (self$forecast_type == "autoarima") {
-        y <- forecast::auto.arima(data$returns)
-        y <- as.data.table(forecast::forecast(y, self$h))
+      if (params$forecast_type == "autoarima") {
+        y <- forecast::auto.arima(x$returns)
+        y <- as.data.table(forecast::forecast(y, params$h))
         cols_prefix <- "autoarima_"
-      } else if (self$forecast_type == "nnetar") {
-        y <- forecast::nnetar(na.omit(data$returns))
-        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
+      } else if (params$forecast_type == "nnetar") {
+        y <- forecast::nnetar(na.omit(x$returns))
+        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=params$h, npaths = 120))
         cols_prefix <- "nnetar_"
-      } else if (self$forecast_type == "ets") {
-        y <- forecast::ets(na.omit(data[, get(price)]))
-        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=self$h, npaths = 120))
-        y <- y - tail(data[, get(price)], 1)
+      } else if (params$forecast_type == "ets") {
+        y <- forecast::ets(na.omit(x[, get(price_col)]))
+        y <- as.data.table(forecast::forecast(y, PI = TRUE, h=params$h, npaths = 120))
+        y <- y - tail(x[, get(price_col)], 1)
         cols_prefix <- "ets_"
       }
 
@@ -123,10 +111,11 @@ RollingForecats = R6::R6Class(
       colnames(mean_forecasts) <- gsub(" ", "", paste0(cols_prefix, "mean_", window, "_", colnames(mean_forecasts)))
       sd_forecasts <- as.data.table(apply(y, 2, sd, na.rm = TRUE, simplify = FALSE))
       colnames(sd_forecasts) <- gsub(" ", "", paste0(cols_prefix, "sd_", window, "_", colnames(sd_forecasts)))
-      data.table(symbol = data$symbol[1], date = data$date[length(data$date)], first_forecasts, last_forecasts, mean_forecasts, sd_forecasts)
+      data.table(first_forecasts, last_forecasts, mean_forecasts, sd_forecasts)
     }
   ),
   private = list(
-    packages = "forecast"
+    packages = "forecast",
+    params = NULL
   )
 )

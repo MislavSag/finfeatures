@@ -12,9 +12,8 @@ test_that(
     RollingExuberInit = RollingExuber$new(windows = 200,
                                           workers = 1L,
                                           at = c(300:310, 500:510),
-                                          na_pad = TRUE,
-                                          simplify = FALSE,
-                                          lag = 1L,)
+                                          lag = 1L,
+                                          exuber_lag = 1)
     x = RollingExuberInit$get_rolling_features(OhlcvInstance)
     expect_s3_class(x, "data.table")
     }

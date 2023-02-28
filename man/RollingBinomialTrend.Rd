@@ -12,27 +12,25 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
+\item{x}{Ohlcv object.}
 
-\item{simplify}{Argument simplify in runner package.}
+\item{window}{Rolling window lengths.}
 
-\item{data}{X field of Ohlcv object}
+\item{price_col}{Prcie column in Ohlcv}
 
-\item{window}{window length. This argument is given internaly}
-
-\item{price}{Price column in Ohlcv}
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingBinomialTrend` object.
 
-Calculate rolling trend, p-value features from binomialtrend package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates trend and p-value from  binomialtrend package
 
 Create a new RollingBinomialTrend object.
 
-Function calculates trend, p-value features from binomialtrend on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
 \examples{
 data(spy_hour)
@@ -40,18 +38,7 @@ OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 RollingBinomialTrendInit = RollingBinomialTrend$new(windows = 200,
                                                     workers = 1L,
                                                     at = c(300, 500),
-                                                    lag = 0L,
-                                                    na_pad = TRUE,
-                                                    simplify = FALSE)
-x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
-head(x)
-# multiple windows and parallel
-RollingBinomialTrendInit = RollingBinomialTrend$new(windows = c(22, 66),
-                                                    workers = 2L,
-                                                    at = c(300:315),
-                                                    lag = 1L,
-                                                    na_pad = TRUE,
-                                                    simplify = FALSE)
+                                                    lag = 0L)
 x = RollingBinomialTrendInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

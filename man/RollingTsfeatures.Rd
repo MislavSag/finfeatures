@@ -12,28 +12,34 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
+\item{scale}{Check argument of tsfeatures function.}
 
-\item{simplify}{Argument simplify in runner package.}
+\item{x}{Ohlcv object.}
 
-\item{data}{X field of Ohlcv object}
+\item{window}{Rolling window lengths.}
 
-\item{window}{window length. This argument is given internaly}
+\item{price_col}{Prcie column in Ohlcv}
 
-\item{price}{Prcie column in Ohlcv}
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingTsfeatures` object.
 
-Calculate rolling tsfeatures features from tsfeatures package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates tsfeatures features on rolling window.
 
 Create a new RollingTsfeatures object.
 
-Function calculates tsfeatures features on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
+\section{Fields}{
+
+\describe{
+\item{\code{scale}}{Check argument of tsfeatures function.}
+}}
+
 \examples{
 data(spy_hour)
 OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -41,8 +47,14 @@ RollingTsfeaturesInit = RollingTsfeatures$new(windows = 200,
                                               workers = 1L,
                                               at = c(300, 500),
                                               lag = 0L,
-                                              na_pad = TRUE,
-                                              simplify = FALSE)
+                                              scale = TRUE)
+x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
+head(x)
+RollingTsfeaturesInit = RollingTsfeatures$new(windows = 200,
+                                              workers = 2L,
+                                              at = c(300, 500),
+                                              lag = 0L,
+                                              scale = c(TRUE, FALSE))
 x = RollingTsfeaturesInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

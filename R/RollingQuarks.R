@@ -10,18 +10,15 @@
 #' RollingQuarksInit = RollingQuarks$new(windows = 200,
 #'                                       workers = 1L,
 #'                                       at = c(300:310, 500:510),
-#'                                       lag = 1L,
-#'                                       na_pad = TRUE,
-#'                                       simplify = FALSE)
+#'                                       lag = 1L)
 #' x = RollingQuarksInit$get_rolling_features(OhlcvInstance)
 #' head(x)
-#' # parallel and multiple windows
+#' # parallel and multiple windows and vector arguments
 #' RollingQuarksInit = RollingQuarks$new(windows = c(200, 400),
 #'                                       workers = 2L,
 #'                                       at = c(300:310, 500:510),
 #'                                       lag = 1L,
-#'                                       na_pad = TRUE,
-#'                                       simplify = FALSE)
+#'                                       p = c(0.95, 0.975))
 #' x = RollingQuarksInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingQuarks = R6::R6Class(
@@ -46,102 +43,86 @@ RollingQuarks = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param p Argument p in quarks package
     #' @param model Argument model in quarks package
     #' @param method Argument method in quarks package
     #'
     #' @return A new `RollingQuarks` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
-                          p = 0.975, model = c("EWMA", "GARCH"),
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          p = 0.975,
+                          model = c("EWMA", "GARCH"),
                           method = c("plain", "age") # "vwhs", "fhs"
-                          ) {
-      self$p = p
-      self$model = model
-      self$method = method
+    ) {
 
+      # define all params combination
+      private$params <- expand.grid(p = p,
+                                    model = model,
+                                    method = method, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("p", "model", "method")
+
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates risk measures (Var, ES) from quarks package on rolling window.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
     #' @return Calculate rolling radf features from exuber package.
-    rolling_function = function(data, window, price) {
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
-      # p = c(0.95, 0.975, 0.99)
-      # model = c("EWMA", "GARCH")
-      # method = c("plain", "age", "vwhs", "fhs")
 
-      p = self$p
-      model = self$model
-      method = self$method
-      params <- expand.grid(p, model, method, stringsAsFactors = FALSE)
-      colnames(params) <- c("p", "model", "method")
-      params <- params[!(params$model == 'GARCH' & params$method == "fhs"), ]
+      # create file name
+      params$p <- params$p * 1000
+      col_name <- paste0(paste(params, sep = "_"), collapse = "_")
+      params$p <- params$p / 1000
 
-      # get forecasts
-      results_l <- list()
-      for (i in 1:nrow(params)) {
-
-        # params
-        params_ <- params[i, ]
-
-        # create file name
-        params_$p <- params_$p * 1000
-        col_name <- paste0(paste(params_, sep = "_"), collapse = "_")
-        params_$p <- params_$p / 1000
-
-        if (params_$method == "fhs") {
-          y <- quarks::rollcast(data[, get(price)], # data[, get(price)],
-                                p = params_$p,
-                                model = params_$model,
-                                method = params_$method,
-                                nout = 1L,
-                                nwin = window - 1,
-                                nboot = 1000
-          )
-        } else {
-          y <- quarks::rollcast(data[, get(price)], # data[, get(price)],
-                                p = params_$p,
-                                model = params_$model,
-                                method = params_$method,
-                                nout = 1L,
-                                nwin = window - 1,
-          )
-        }
-        VaR <- (y$xout - abs(y$VaR)) / y$xout
-        ES <- (y$xout - abs(y$ES)) / y$xout
-        cols <- c(paste0("var_", col_name), paste0("es_", col_name))
-        risk_measures <- data.table(VaR, ES)
-        colnames(risk_measures) <- paste0(cols, "_", window)
-        results_l[[i]] <- risk_measures
+      if (params$method == "fhs") {
+        y <- quarks::rollcast(x[, get(price_col)],
+                              p = params$p,
+                              model = params$model,
+                              method = params$method,
+                              nout = 1L,
+                              nwin = window - 1,
+                              nboot = 1000
+        )
+      } else {
+        y <- quarks::rollcast(x[, get(price_col)],
+                              p = params$p,
+                              model = params$model,
+                              method = params$method,
+                              nout = 1L,
+                              nwin = window - 1,
+        )
       }
-      result <- do.call(cbind, results_l)
-      result <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], result)
-      return(as.data.table(result))
+      VaR <- (y$xout - abs(y$VaR)) / y$xout
+      ES <- (y$xout - abs(y$ES)) / y$xout
+      cols <- c(paste0("var_", col_name), paste0("es_", col_name))
+      risk_measures <- data.table(VaR, ES)
+      colnames(risk_measures) <- paste0(cols, "_", window)
+      return(as.data.table(risk_measures))
     }
   ),
 
   private = list(
-    packages = "quarks"
+    packages = "quarks",
+    params = NULL
   )
 )

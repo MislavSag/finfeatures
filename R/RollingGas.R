@@ -11,9 +11,16 @@
 #'                                 workers = 1L,
 #'                                 at = c(300, 500),
 #'                                 lag = 0L,
-#'                                 na_pad = TRUE,
-#'                                 simplify = FALSE,
 #'                                 gas_dist = "sstd",
+#'                                 gas_scaling = "Identity",
+#'                                 prediction_horizont = 10)
+#' x = RollingGasInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' RollingGasInit = RollingGas$new(windows = 200,
+#'                                 workers = 2L,
+#'                                 at = c(300, 500),
+#'                                 lag = 0L,
+#'                                 gas_dist = c("std", "sstd"),
 #'                                 gas_scaling = "Identity",
 #'                                 prediction_horizont = 10)
 #' x = RollingGasInit$get_rolling_features(OhlcvInstance)
@@ -43,39 +50,34 @@ RollingGas = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param gas_dist Dist parametere in UniGASSpec fucntionUniGASSpec.
     #' @param gas_scaling Scaling parametere in UniGASSpec fucntionUniGASSpec.
     #' @param prediction_horizont GAS prediction horizont.
     #'
     #' @return A new `RollingGas` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
                           gas_dist = "sstd",
                           gas_scaling = "Identity",
                           prediction_horizont = 22) {
 
-      self$gas_dist = gas_dist
-      self$gas_scaling = gas_scaling
-      self$prediction_horizont = prediction_horizont
+      # define all params combination
+      private$params <- expand.grid(gas_dist = gas_dist,
+                                    gas_scaling = gas_scaling,
+                                    prediction_horizont = prediction_horizont,
+                                    stringsAsFactors = FALSE)
+      colnames(private$params) <- c("gas_dist", "gas_scaling", "prediction_horizont")
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
-
-      # GAS specification
-      self$GASSpec <- GAS::UniGASSpec(Dist = self$gas_dist,
-                                      ScalingType = self$gas_scaling,
-                                      GASPar = list(location = TRUE,
-                                                    scale = TRUE, shape = TRUE,
-                                                    skewness = TRUE))
-
     },
 
     #' @description
@@ -106,25 +108,34 @@ RollingGas = R6::R6Class(
     },
 
     #' @description
-    #' Function calculates GAS risk values from GAS package on rolling window.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling GAS features from GAS package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
+      # GAS specification
+      GASSpec <- GAS::UniGASSpec(Dist = params$gas_dist,
+                                 ScalingType = params$gas_scaling,
+                                 GASPar = list(location = TRUE,
+                                               scale = TRUE,
+                                               shape = TRUE,
+                                               skewness = TRUE))
+
+
       # calculate arima forecasts
-      Fit <- tryCatch(GASS::UniGASFit(self$GASSpec, na.omit(data$returns)),
+      Fit <- tryCatch(GAS::UniGASFit(GASSpec, na.omit(x$returns)),
                       error = function(e) NA)
-      if (isS4(Fit)) y <- GASS::UniGASFor(Fit, H = self$prediction_horizont, ReturnDraws = TRUE) else y <- NA
+      if (isS4(Fit)) y <- GAS::UniGASFor(Fit, H = params$prediction_horizont, ReturnDraws = TRUE) else y <- NA
       if ((!isS4(Fit) && is.na(y)) || any(is.na(y@Draws))) {
         return(NA)
       } else {
@@ -136,14 +147,16 @@ RollingGas = R6::R6Class(
         moments <- self$get_series_statistics(moments, "moments")
         f <- as.data.table(GAS::getForecast(y))
         f <- self$get_series_statistics(f, "f")
-        results <- cbind(symbol = data$symbol[1], date = data$date[length(data$date)], q, es, moments, f)
-        colnames(results)[3:ncol(results)] <- paste(colnames(results)[3:ncol(results)], window, sep = "_")
+        results <- cbind(q, es, moments, f)
+        colnames(results) <- paste(colnames(results), window,
+                                   paste0(params, collapse = "_"), sep = "_")
         return(results)
       }
     }
   ),
 
   private = list(
-    packages = "GAS"
+    packages = "GAS",
+    params = NULL
   )
 )

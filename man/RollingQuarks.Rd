@@ -12,21 +12,19 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{p}{Argument p in quarks package}
 
 \item{model}{Argument model in quarks package}
 
 \item{method}{Argument method in quarks package}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingQuarks` object.
@@ -38,7 +36,7 @@ Function calculates risk measures (Var, ES) from quarks package on rolling windo
 
 Create a new RollingExuber object.
 
-Function calculates risk measures (Var, ES) from quarks package on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -56,18 +54,15 @@ OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 RollingQuarksInit = RollingQuarks$new(windows = 200,
                                       workers = 1L,
                                       at = c(300:310, 500:510),
-                                      lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
+                                      lag = 1L)
 x = RollingQuarksInit$get_rolling_features(OhlcvInstance)
 head(x)
-# parallel and multiple windows
+# parallel and multiple windows and vector arguments
 RollingQuarksInit = RollingQuarks$new(windows = c(200, 400),
                                       workers = 2L,
                                       at = c(300:310, 500:510),
                                       lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
+                                      p = c(0.95, 0.975))
 x = RollingQuarksInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

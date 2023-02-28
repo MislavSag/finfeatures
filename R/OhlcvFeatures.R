@@ -9,7 +9,7 @@
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
 #' RollingOhlcvFeatures = OhlcvFeatures$new(at = NULL,
 #'                                          windows = c(200, 300),
-#'                                          quantile_divergence_window =  c(50, 100))
+#'                                          quantile_divergence_window =  c(100, 200))
 #' x = RollingOhlcvFeatures$get_ohlcv_features(OhlcvInstance)
 #' tail(x)
 OhlcvFeatures = R6::R6Class(
@@ -42,14 +42,13 @@ OhlcvFeatures = R6::R6Class(
       self$at = at
       self$windows = windows
       self$quantile_divergence_window = quantile_divergence_window
-      # self$frequnit = frequnit
     },
+    # self$frequnit = frequnit
 
     #' @description
     #' Function calculates basic features from OHLCV financial data
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly.
+    #' @param data X field of Ohlcv object.
     #'
     #' @return Data.table with new features.
     get_ohlcv_features = function(data) {
@@ -65,7 +64,8 @@ OhlcvFeatures = R6::R6Class(
       # library(QuantTools)
       # ohlcv <- as.data.table(stocks)
       # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
-      # quantile_divergence_window =  c(22, 22*3, 22*6, 22*12, 22*12*2)
+      # self = list()
+      # self$quantile_divergence_window =  c(50, 100)
       # at_ <- c(500, 1000)
       # ohlcv <- fread("D:/temp/prices_dt.csv")
       # at_ <- readRDS("D:/temp/at.rds")
@@ -225,7 +225,7 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
                                                                                  na_method = "ignore"))), by = symbol]
       # rolling quantile substraction
-      print("Calculate rolling quantile div.")
+      print("Calculate rolling quantile div")
       generate_quantile_divergence <- function(ohlcv, p = 0.99, window_sizes = self$quantile_divergence_window) {
         q_cols <- paste0("q", p * 100, "_close_", window_sizes)
         ohlcv[, (q_cols) := lapply(window_sizes, function(w) roll::roll_quantile(close, width = w, p = p)), by = symbol]
@@ -259,6 +259,7 @@ OhlcvFeatures = R6::R6Class(
       # ohlcv[, (new_cols) := NULL]
 
       # estimate changepoints breaks (fast = FALSE)
+      print("Structural break.")
       for (i in c(370, 500, 1000, 5000)) {
         ohlcv[, paste(c('breaks'), i, sep = '_') := self$get_changepoints(returns_1, method = 'Mood', i), by = .(symbol)]
       }

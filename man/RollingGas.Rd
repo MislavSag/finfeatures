@@ -12,10 +12,6 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{gas_dist}{Dist parametere in UniGASSpec fucntionUniGASSpec.}
 
 \item{gas_scaling}{Scaling parametere in UniGASSpec fucntionUniGASSpec.}
@@ -26,18 +22,20 @@
 
 \item{colname_prefix}{Prefix for column names}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingGas` object.
 
 Calculate rolling GAS features from GAS package.
 
-Calculate rolling GAS features from GAS package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates GAS risk values from GAS package on rolling window.
@@ -46,7 +44,7 @@ Create a new RollingExuber object.
 
 Help function for Rolling GAS
 
-Function calculates GAS risk values from GAS package on rolling window.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -67,9 +65,16 @@ RollingGasInit = RollingGas$new(windows = 200,
                                 workers = 1L,
                                 at = c(300, 500),
                                 lag = 0L,
-                                na_pad = TRUE,
-                                simplify = FALSE,
                                 gas_dist = "sstd",
+                                gas_scaling = "Identity",
+                                prediction_horizont = 10)
+x = RollingGasInit$get_rolling_features(OhlcvInstance)
+head(x)
+RollingGasInit = RollingGas$new(windows = 200,
+                                workers = 2L,
+                                at = c(300, 500),
+                                lag = 0L,
+                                gas_dist = c("std", "sstd"),
                                 gas_scaling = "Identity",
                                 prediction_horizont = 10)
 x = RollingGasInit$get_rolling_features(OhlcvInstance)

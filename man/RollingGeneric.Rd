@@ -12,17 +12,15 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{packages}{Packages that need to be installed.}
 
 \item{x}{Ohlcv object.}
 
 \item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 
 \item{Ohlcv}{Ohlcv object}
 
@@ -55,10 +53,6 @@ Helping function for calculating rolling features.
 \item{\code{lag}}{Lag variable in runner package.}
 
 \item{\code{at}}{Argument at in runner package.}
-
-\item{\code{na_pad}}{Argument na_pad from runner package}
-
-\item{\code{simplify}}{Argument simplify from runner package.}
 
 \item{\code{packages}}{Packages that needs to be installed.}
 }}

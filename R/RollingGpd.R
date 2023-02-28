@@ -11,18 +11,14 @@
 #'                                 workers = 1L,
 #'                                 at = c(300, 500),
 #'                                 lag = 0L,
-#'                                 na_pad = TRUE,
-#'                                 simplify = FALSE,
-#'                                 threshold = 0.01)
+#'                                 threshold = 0.03)
 #' x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 #' RollingGpdInit = RollingGpd$new(windows = 200,
 #'                                 workers = 2L,
-#'                                 at = c(300:310, 500:510),
+#'                                 at = c(300, 500),
 #'                                 lag = 0L,
-#'                                 na_pad = TRUE,
-#'                                 simplify = FALSE,
-#'                                 threshold = 0.01)
+#'                                 threshold = c(0,02, 0.03))
 #' x = RollingGpdInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingGpd = R6::R6Class(
@@ -41,23 +37,25 @@ RollingGpd = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param threshold Threshold parameter for returns. Returns below/above this threshold will be input.
     #'
     #' @return A new `RollingGpd` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
                           threshold = 0.03) {
 
-      self$threshold = threshold
+      # define all params combination
+      private$params <- expand.grid(threshold = threshold, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("threshold")
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
@@ -108,42 +106,42 @@ RollingGpd = R6::R6Class(
     },
 
     #' @description
-    #' Function calculates GPD risk measures on rolling window from ptsuite pakcage.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling features from ptsuite package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
       # returns
-      r <- na.omit(data$returns)
+      r <- na.omit(x$returns)
 
       # pareto left tail
-      x_left <- r[r < -self$threshold] * -1
+      x_left <- r[r < -params] * -1
       risks_left <- self$estimate_gpd(x_left, hill_threshold = 0.02, suffix = '_left')
 
       # pareto test right tail
-      x_right <- r[r > self$threshold]
+      x_right <- r[r > params]
       risks_right <- self$estimate_gpd(x_right, hill_threshold = 0.02)
 
       # estimate shape parameters
       pareto_tests <- cbind(risks_left, risks_right)
-      results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], pareto_tests)
-      colnames(results)[3:ncol(results)] <- paste(colnames(results)[3:ncol(results)], window, self$threshold * 100, sep = "_")
+      results <- as.data.table(pareto_tests)
+      colnames(results) <- paste(colnames(results), window, params * 100, sep = "_")
       return(results)
-
     }
   ),
 
   private = list(
-    packages = "ptsuite"
+    packages = "ptsuite",
+    params = NULL
   )
 )

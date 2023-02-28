@@ -10,9 +10,7 @@
 
 \item{quantile_divergence_window}{Window sizes from divergence from quantiles indicator.}
 
-\item{data}{X field of Ohlcv object}
-
-\item{window}{window length. This argument is given internaly.}
+\item{data}{X field of Ohlcv object.}
 
 \item{returns}{Returns column.}
 

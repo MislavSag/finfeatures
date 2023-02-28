@@ -11,8 +11,14 @@
 #'                                         workers = 1L,
 #'                                         at = c(300, 500),
 #'                                         lag = 0L,
-#'                                         na_pad = TRUE,
-#'                                         simplify = FALSE)
+#'                                         turbo = TRUE)
+#' x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' RollingTvgarchInit = RollingTvgarch$new(windows = 200,
+#'                                         workers = 2L,
+#'                                         at = c(300, 500),
+#'                                         lag = 0L,
+#'                                         turbo = c(TRUE, FALSE))
 #' x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingTvgarch = R6::R6Class(
@@ -21,6 +27,9 @@ RollingTvgarch = R6::R6Class(
 
   public = list(
 
+    #' @field turbo Check argument in tvgarch function.
+    turbo = NULL,
+
     #' @description
     #' Create a new RollingExuber object.
     #'
@@ -28,57 +37,59 @@ RollingTvgarch = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
+    #' @param turbo Check argument in tvgarch function.
     #'
     #' @return A new `RollingGas` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify) {
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          turbo = TRUE) {
 
+      # define all params combination
+      private$params <- expand.grid(turbo = turbo, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("turbo")
+
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling tvgarch features from tvgarch package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
-      # yEst <- tvgarch(y = ySim, turbo = TRUE)
-      # predict(yEst)
-      # coef(yEst)
-
       # calculate arima forecasts
-      y <- na.omit(data$returns) * 100
+      y <- na.omit(x$returns) * 100
       y <- tvgarch::tvgarch(y, turbo = TRUE)
       pred <- as.numeric(predict(y))
       coefs <- coef(y)
       results <- data.table(pred_1 = pred[1], pred_n = tail(pred, 1), pred_mean = mean(pred, na.rm = TRUE), t(coefs))
       colnames(results) <- paste0("tvgarch_", colnames(results))
-      results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], results)
-      colnames(results)[3:ncol(results)] <- paste(colnames(results)[3:ncol(results)], window, sep = "_")
+      colnames(results) <- paste(colnames(results), params, window, sep = "_")
       return(results)
     }
   ),
 
   private = list(
-    packages = "tvgarch"
+    packages = "tvgarch",
+    params = NULL
   )
 )

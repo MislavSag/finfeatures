@@ -7,14 +7,19 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingWaveletArimaInstance = RollingWaveletArima$new(windows = c(10, 20),
-#'                                                       workers = 2L,
-#'                                                       lag = 1L,
-#'                                                       at = c(100:110, 200:210),
-#'                                                       na_pad = TRUE,
-#'                                                       simplify = FALSE,
-#'                                                       filter = "haar")
-#' x = RollingWaveletArimaInstance$get_rolling_features(OhlcvInstance)
+#' RollingWaveletArimaInit = RollingWaveletArima$new(windows = 200,
+#'                                                   workers = 1L,
+#'                                                   at = c(300, 500),
+#'                                                   lag = 0L,
+#'                                                   filter = "haar")
+#' x = RollingWaveletArimaInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' RollingWaveletArimaInit = RollingWaveletArima$new(windows = 200,
+#'                                                   workers = 2L,
+#'                                                   at = c(300, 500),
+#'                                                   lag = 0L,
+#'                                                   filter = c("haar", "la8"))
+#' x = RollingWaveletArimaInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingWaveletArima = R6::R6Class(
   "RollingWaveletArima",
@@ -44,8 +49,6 @@ RollingWaveletArima = R6::R6Class(
     #' @param workers Number of threads.
     #' @param lag Argument lag in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param filter Wavelet filter use in the decomposition.
     #' @param Waveletlevels The level of wavelet decomposition.
     #' @param MaxARParam The maximum AR order for auto.arima.
@@ -53,61 +56,66 @@ RollingWaveletArima = R6::R6Class(
     #' @param NForecast Forecast horizont.
     #'
     #' @return A new `RollingForecats` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
-                          filter = c("haar", "la8"), MaxARParam = 5,
-                          MaxMAParam = 5, NForecast = 5) {
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          filter = c("haar", "la8"),
+                          MaxARParam = 5,
+                          MaxMAParam = 5,
+                          NForecast = 5) {
 
-      # parameters
-      self$filter = match.arg(filter)
-      self$MaxARParam = MaxARParam
-      self$MaxMAParam = MaxMAParam
-      self$NForecast = NForecast
-      # What to do with Waveletlevels ?
+      # define all params combination
+      private$params <- expand.grid(filter = filter,
+                                    MaxARParam = MaxARParam,
+                                    MaxMAParam = MaxMAParam,
+                                    NForecast = NForecast,
+                                    stringsAsFactors = FALSE)
+      colnames(private$params) <- c("filter", "MaxARParam", "MaxMAParam",
+                                    "NForecast")
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling features from forecasting package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
       # calculate arima forecasts
-      y <- WaveletArima::WaveletFittingarma(ts = na.omit(data$returns),
-                                            filter = self$filter,
-                                            Waveletlevels = floor(log(length(data$returns))),
-                                            MaxARParam = self$MaxARParam,
-                                            MaxMAParam = self$MaxMAParam,
-                                            NForecast = self$NForecast)
+      y <- WaveletArima::WaveletFittingarma(ts = na.omit(x$returns),
+                                            filter = params$filter,
+                                            Waveletlevels = floor(log(length(x$returns))),
+                                            MaxARParam = params$MaxARParam,
+                                            MaxMAParam = params$MaxMAParam,
+                                            NForecast = params$NForecast)
       forecasts <- data.table::as.data.table(t(y$Finalforecast))
       colnames(forecasts) <- paste0("WaveletFittingarma_forecasts_", seq_along(forecasts))
       forecasts[, WaveletFittingarma_forecasts_mean := mean(y$Finalforecast)]
       forecasts[, WaveletFittingarma_forecasts_sd := sd(y$Finalforecast)]
-      cbind(symbol = data$symbol[1],
-            date = data$date[length(data$date)],
-            forecasts)
+      forecasts
     }
   ),
   private = list(
-    packages = c("WaveletArima")
+    packages = c("WaveletArima"),
+    params = NULL
   )
 )

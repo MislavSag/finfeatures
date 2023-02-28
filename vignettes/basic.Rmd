@@ -41,13 +41,12 @@ ohlcv = Ohlcv$new(spy_hour, date_col = "datetime")
 # Rolling indicators
 
 ```{r}
-RollingExuberInit = RollingExuber$new(windows = c(200, 400),
-                                      workers = 1L,
-                                      at = c(500:505),
+RollingExuberInit = RollingExuber$new(windows = c(200, 250),
+                                      workers = 0L,
+                                      at = c(2, 300:310, 500:510),
                                       lag = 1L,
-                                      na_pad = TRUE,
-                                      simplify = FALSE)
-exuber_features = RollingExuberInit$get_rolling_features(ohlcv)
+                                      exuber_lag = 1)
+x = RollingExuberInit$get_rolling_features(ohlcv)
 ```
 
 ```{r}

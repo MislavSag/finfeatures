@@ -12,9 +12,15 @@
 #'                                     workers = 1L,
 #'                                     at = c(300, 500),
 #'                                     lag = 0L,
-#'                                     na_pad = TRUE,
-#'                                     simplify = FALSE,
 #'                                     features_set = "catch22")
+#' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+#' head(x)
+#' # parallel and multiple windows and vector argument
+#' RollingTheftInit = RollingTheft$new(windows = 200,
+#'                                     workers = 2L,
+#'                                     at = c(300, 500),
+#'                                     lag = 0L,
+#'                                     features_set = c("catch22", "feasts"))
 #' x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingTheft = R6::R6Class(
@@ -33,23 +39,27 @@ RollingTheft = R6::R6Class(
     #' @param workers Number of workers. Greater than 1 for parallle processing
     #' @param lag Lag variable in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param features_set Argument from the theft package
     #'
     #' @return A new `RollingTheft` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
                           features_set = c("catch22", "feasts", "tsfeatures",
                                            "kats", "tsfresh", "tsfel")) {
-      self$features_set = features_set
 
+      # define all params combination
+      private$params <- expand.grid(features_set = features_set, stringsAsFactors = FALSE)
+      colnames(private$params) <- c("features_set")
+
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify
+        private$packages
       )
 
       # DEBUGE - set python path
@@ -64,34 +74,31 @@ RollingTheft = R6::R6Class(
     },
 
     #' @description
-    #' Function calculates catch 22 features on rolling window.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling radf features from theft package.
-    rolling_function = function(data, window, price) {
-
-      # DEBUG
-      # y <<- data
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
       # calculate features
-      y <- as.data.table(theft::calculate_features(data,
+      y <- as.data.table(theft::calculate_features(x,
                                                    "symbol",
                                                    "date",
-                                                   price,
-                                                   feature_set = self$features_set,
+                                                   price_col,
+                                                   feature_set = params,
                                                    tsfresh_cleanup = TRUE))
       y[, var_names := paste(method, names, window, sep = "_")]
       y <- transpose(y[, .(var_names, values)], make.names = TRUE)
-      results <- data.table(symbol = data$symbol[1], date = data$date[length(data$date)], y)
+      results <- as.data.table(y)
 
       # chamnge column names to fit to mlr3
       colnames(results) <- gsub(" |-", "_", colnames(results))
@@ -100,7 +107,8 @@ RollingTheft = R6::R6Class(
     }
   ),
   private = list(
-    packages = "theft"
+    packages = "theft",
+    params = NULL
   )
 )
 

@@ -7,14 +7,13 @@
 #' @examples
 #' data(spy_hour)
 #' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' # fracdiff arima
-#' RollingFracdiffInstance = RollingFracdiff$new(windows = c(10, 20),
-#'                                               workers = 1L,
-#'                                               lag = 1L,
-#'                                               at = c(100:110, 200:210),
-#'                                               na_pad = TRUE,
-#'                                               simplify = FALSE)
-#' x = RollingFracdiffInstance$get_rolling_features(OhlcvInstance)
+#' RollingFracdiffInit = RollingFracdiff$new(windows = 200,
+#'                                           workers = 1L,
+#'                                           at = c(300, 500),
+#'                                           lag = 0L,
+#'                                           nar = 1,
+#'                                           nma = 1)
+#' x = RollingFracdiffInit$get_rolling_features(OhlcvInstance)
 #' head(x)
 RollingFracdiff = R6::R6Class(
   "RollingFracdiff",
@@ -38,55 +37,58 @@ RollingFracdiff = R6::R6Class(
     #' @param workers Number of threads.
     #' @param lag Argument lag in runner package.
     #' @param at Argument at in runner package.
-    #' @param na_pad Argument na_pad in runner package.
-    #' @param simplify Argument simplify in runner package.
     #' @param nar Argument nar in fracdiff function.
     #' @param nma Argument nam in fracdiff function.
     #' @param bandw_exp Argument bandw.exp in fracdiff function.
     #'
     #' @return A new `RollingFracdiff` object.
-    initialize = function(windows, workers, lag, at, na_pad, simplify,
-                          nar = c(1, 2), nma = c(1, 2), bandw_exp = c(0.1, 0.5, 0.9)) {
+    initialize = function(windows,
+                          workers,
+                          lag,
+                          at,
+                          nar = c(1, 2),
+                          nma = c(1, 2),
+                          bandw_exp = c(0.1, 0.5, 0.9)) {
 
       # checks
       if (length(nar) != length(nma)) stop("nar and nam must be of the same length")
 
-      # parameters
-      self$nar = nar
-      self$nma = nma
-      self$bandw_exp = bandw_exp
+      # define all params combination
+      private$params <- expand.grid(nar = nar,
+                                    nma = nma,
+                                    bandw_exp = bandw_exp,
+                                    stringsAsFactors = FALSE)
+      colnames(private$params) <- c("nar", "nma", "bandw_exp")
 
+      # super initialize from RollingGeneric
       super$initialize(
         windows,
         workers,
         lag,
         at,
-        na_pad,
-        simplify,
         private$packages
       )
     },
 
     #' @description
-    #' Function calculates forecastas based on auto.arima and nnetar functions from forecast package.
+    #' Function calculates radf values from exuber package on rolling window.
     #'
-    #' @param data X field of Ohlcv object
-    #' @param window window length. This argument is given internaly
-    #' @param price Prcie column in Ohlcv
+    #' @param x Ohlcv object.
+    #' @param window Rolling window lengths.
+    #' @param price_col Prcie column in Ohlcv
+    #' @param params Vector of parameters
     #'
-    #' @return Calculate rolling features from forecasting package.
-    rolling_function = function(data, window, price) {
+    #' @return Calculate rolling radf features from exuber package.
+    rolling_function = function(x, window, price_col, params) {
 
       # check if there is enough data
-      if (length(unique(data$symbol)) > 1) {
-        print(paste0("not enough data for symbol ", data$symbol[1]))
+      if (length(unique(x$symbol)) > 1) {
         return(NA)
       }
 
       # calculate arfima coefficitents
-      # price <- spy_hour$close[1:5000]
-      fitted <- lapply(seq_along(self$nar), function(i) {
-        fracdiff::fracdiff(data[, get(price)], nar = self$nar[i], nma = self$nma[i])
+      fitted <- lapply(seq_along(params$nar), function(i) {
+        fracdiff::fracdiff(x[, get(price_col)], nar = params$nar[i], nma = params$nma[i])
       })
       fitted_coefs <- lapply(fitted, coef)
       for (i in seq_along(fitted_coefs)) {
@@ -95,10 +97,10 @@ RollingFracdiff = R6::R6Class(
       vars <- do.call(c, fitted_coefs)
 
       # calculate d
-      ds <- lapply(self$bandw_exp, function(be) {
-        fdGPH_ <- as.data.frame(fracdiff::fdGPH(data[, get(price)], bandw.exp = be))
+      ds <- lapply(params$bandw_exp, function(be) {
+        fdGPH_ <- as.data.frame(fracdiff::fdGPH(x[, get(price_col)], bandw.exp = be))
         colnames(fdGPH_) <- paste0(colnames(fdGPH_), "_fdGPH_", be)
-        fdSperio_ <- as.data.frame(fracdiff::fdSperio(data[, get(price)], bandw.exp = be, beta = 0.9))
+        fdSperio_ <- as.data.frame(fracdiff::fdSperio(x[, get(price_col)], bandw.exp = be, beta = 0.9))
         colnames(fdSperio_) <- paste0(colnames(fdSperio_), "_fdSperio_", be)
         cbind(fdGPH_, fdSperio_)
       })
@@ -108,10 +110,11 @@ RollingFracdiff = R6::R6Class(
 
       # clean names
       names(vars) <- paste0(names(vars), "_", window)
-      data.table(symbol = data$symbol[1], date = data$date[length(data$date)], t(vars))
+      data.table(t(vars))
     }
   ),
   private = list(
-    packages = "fracdiff"
+    packages = "fracdiff",
+    params = NULL
   )
 )

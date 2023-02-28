@@ -12,29 +12,27 @@
 
 \item{at}{Argument at in runner package.}
 
-\item{na_pad}{Argument na_pad in runner package.}
-
-\item{simplify}{Argument simplify in runner package.}
-
 \item{methods}{Argument methods in Bidask package.}
 
-\item{data}{X field of Ohlcv object}
+\item{x}{Ohlcv object.}
 
-\item{window}{window length. This argument is given internaly}
+\item{window}{Rolling window lengths.}
 
-\item{price}{Prcie column in Ohlcv}
+\item{price_col}{Prcie column in Ohlcv}
+
+\item{params}{Vector of parameters}
 }
 \value{
 A new `RollingBidAsk` object.
 
-Calculate rolling features from Bidask package.
+Calculate rolling radf features from exuber package.
 }
 \description{
 Function calculates spread from exuber bidask package.
 
 Create a new RollingBidAsk object.
 
-Function calculates spread from exuber bidask package.
+Function calculates radf values from exuber package on rolling window.
 }
 \section{Fields}{
 
@@ -49,9 +47,15 @@ RollingBidAskInstance <- RollingBidAsk$new(windows = 200,
                                            workers = 2L,
                                            at = c(300, 500),
                                            lag = 1L,
-                                           na_pad = TRUE,
-                                           simplify = FALSE
-)
+                                           method = "EDGE")
+x = RollingBidAskInstance$get_rolling_features(OhlcvInstance)
+head(x)
+# multiple windows and parallel and vector arguments
+RollingBidAskInstance <- RollingBidAsk$new(windows = 200,
+                                           workers = 2L,
+                                           at = c(300, 500),
+                                           lag = 1L,
+                                           method = c("EDGE", "Roll"))
 x = RollingBidAskInstance$get_rolling_features(OhlcvInstance)
 head(x)
 }
