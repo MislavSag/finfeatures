@@ -89,16 +89,20 @@ RollingTheft = R6::R6Class(
         return(NA)
       }
 
+      # debug
+      # x = as.data.table(spy_hour)
+      # x = x[, .(symbol, date, close)]
+
       # calculate features
-      y <- as.data.table(theft::calculate_features(x,
+      y <- data.table::as.data.table(theft::calculate_features(x,
                                                    "symbol",
                                                    "date",
                                                    price_col,
                                                    feature_set = params,
-                                                   tsfresh_cleanup = TRUE))
+                                                   tsfresh_cleanup = TRUE)[[1]])
       y[, var_names := paste(method, names, window, sep = "_")]
-      y <- transpose(y[, .(var_names, values)], make.names = TRUE)
-      results <- as.data.table(y)
+      y <- data.table::transpose(y[, .(var_names, values)], make.names = TRUE)
+      results <- data.table::as.data.table(y)
 
       # chamnge column names to fit to mlr3
       colnames(results) <- gsub(" |-", "_", colnames(results))
