@@ -3,17 +3,9 @@
 #' @description
 #' Function calculates basic features from OHLCV financial data
 #'
-#' @export
-#' @examples
-#' data(spy_hour)
-#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingOhlcvFeatures = OhlcvFeatures$new(at = NULL,
-#'                                          windows = c(200, 300),
-#'                                          quantile_divergence_window =  c(100, 200))
-#' x = RollingOhlcvFeatures$get_ohlcv_features(OhlcvInstance)
-#' tail(x)
-OhlcvFeatures = R6::R6Class(
-  "OhlcvFeatures",
+#' @exports
+OhlcvFeaturesDaily = R6::R6Class(
+  "OhlcvFeaturesDaily",
 
   public = list(
 
@@ -65,13 +57,28 @@ OhlcvFeatures = R6::R6Class(
       # library(PerformanceAnalytics)
       # library(TTR)
       # library(RollingWindow)
+      # # import daily data
+      # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
+      # ohlcv = fread("F:/lean_root/data/all_stocks_daily.csv", col.names = col)
+      # ohlcv = unique(ohlcv, by = c("symbol", "date"))
+      # unadjustd_cols = c("open", "high", "low")
+      # ohlcv[, (unadjustd_cols) := lapply(.SD, function(x) (close_adj / close) * x), .SDcols = unadjustd_cols]
+      # ohlcv = na.omit(ohlcv)
+      # setorder(ohlcv, symbol, date)
+      # setnames(ohlcv, c("close", "close_adj"), c("close_raw", "close"))
+      # ohlcv = ohlcv[open > 0.00001 & high > 0.00001 & low > 0.00001 & close > 0.00001]
+      # ohlcv[, returns := close / shift(close) - 1, by = "symbol"]
+      # ohlcv_n = ohlcv[, .N, by = symbol]
+      # symbols_keep = ohlcv_n[N > max(windows_), symbol]
+      # ohlcv = ohlcv[symbol %in% symbols_keep]
+      # dim(ohlcv)
+      # # ohlcv = Ohlcv$new(ohlcv, id_col = "symbol", date_col = "date")
+      #
       # ohlcv <- as.data.table(stocks)
       # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
       # self = list()
       # self$quantile_divergence_window =  c(50, 100)
       # at_ <- NULL
-      # ohlcv <- fread("D:/temp/prices_dt.csv")
-      # at_ <- readRDS("D:/temp/at.rds")
       ###### DEBUG ######
 
       # prepare data
@@ -97,33 +104,68 @@ OhlcvFeatures = R6::R6Class(
         ohlcv <- ohlcv[keep_indecies]
       }
 
+
+      # MY PREDICTORS -----------------------------------------------------------
+      print("My predictors.")
+
       # close ATH
-      print("Calculate close ATH div.")
-      ohlcv[, close_ath := (cummax(high) - close) / cummax(high), by = symbol]
-      new_cols <- paste0("ath_", windows_)
-      ohlcv[, (new_cols) := lapply(c(1, windows_), function(w) (shift(frollapply(high, w, max), 1L) / close) - 1), by = symbol]
+      print("Close ATH")
+      ohlcv[, close_ath := close / cummax(fifelse(is.na(high), -Inf, high)), by = symbol]
+
+      # minimum return
+      print("Rolling min returns")
+      ohlcv[, min_ret := frollapply(returns, 22, min, na.rm = TRUE), by = symbol]
+
+      # returns
+      print("Calculate returns")
+      w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      new_cols <- paste0("returns_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
+
+      # volumes
+      print("Volume percent changes")
+      w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      new_cols <- paste0("volume_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
       # whole number discrepancy
       print("Calculate whole number discrepancy.")
-      ohlcv$pretty_1 <- vapply(ohlcv$close, function(x) pretty(x)[1], numeric(1L))
-      ohlcv$pretty_2 <- sapply(ohlcv$close, function(x) pretty(x)[2])
-      ohlcv[, pretty_1 := ifelse(pretty_1 <= 0, 0.01, pretty_1)]
-      ohlcv[, close_round_div_down := (close - pretty_1) / pretty_1]
-      ohlcv[, close_round_div_up := (close - pretty_2) / pretty_2]
-      ohlcv[, `:=`(pretty_1 = NULL, pretty_2 = NULL)]
-
-      # returns
-      print("Calculate returns.")
-      new_cols <- paste0("returns_", unique(c(1:12, windows_)))
-      ohlcv[, (new_cols) := lapply(c(1:12, windows_), function(w) close / shift(close, n = w) - 1), by = symbol]
+      ohlcv[, pretty_1 := fcase(
+        close < 0.1, ceiling(close * 100) / 100,
+        close < 1 & close > 0.1, ceiling(close * 10) / 10,
+        close < 10 & close >= 1, ceiling(close),
+        close < 100 & close >= 10, ceiling(close / 10) * 10,
+        close < 1000 & close >= 100, ceiling(close / 100) * 100,
+        close < 10000 & close >= 1000, ceiling(close / 1000) * 1000,
+        close >= 10000 & close < 100000, ceiling(close / 10000) * 10000,
+        close >= 100000, ceiling(close / 100000) * 100000
+      )]
+      ohlcv[, pretty_2 := fcase(
+        close < 0.1, floor((close - 0.0001) * 100) / 100,
+        close < 1 & close > 0.1, floor((close - 0.0001) * 10) / 10,
+        close < 10 & close >= 1, floor((close - 0.0001)),
+        close < 100 & close >= 10, floor((close - 0.0001) / 10) * 10,
+        close < 1000 & close >= 100, floor((close - 0.0001) / 100) * 100,
+        close < 10000 & close >= 1000, floor((close - 0.0001) / 1000) * 1000,
+        close >= 10000 & close < 100000, floor((close - 0.0001) / 10000) * 10000,
+        close >= 100000, floor((close - 0.0001) / 100000) * 100000
+      )]
+      # ohlcv[sample(1:nrow(ohlcv), 20), .(symbol, date, close, pretty_1, pretty_2)]
+      # ohlcv[close > 1000000, .(symbol, date, close, pretty_1, pretty_2)]
+      # ohlcv[close < 1, .(symbol, date, close, pretty_1, pretty_2)]
+      # ohlcv[close < 0.1, .(symbol, date, close, pretty_1, pretty_2)]
+      # ohlcv[close < 0.01, .(symbol, date, close, pretty_1, pretty_2)]
+      # ohlcv[pretty_1  == pretty_2]
+      ohlcv[, pretty_1 := (close - pretty_1) / pretty_1]
+      ohlcv[, pretty_2 := (close - pretty_2) / pretty_2]
 
       # rolling volatility
-      print("Calculate rolling volatility.")
+      print("Rolling volatility.")
       new_cols <- paste0("sd_", windows_)
-      ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
+      ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns, width = w)), by = symbol]
 
       # Close-to-Close Volatility
-      print("Calculate OHLCV volatility.")
+      print("OHLCV volatility.")
       new_cols <- paste0("sd_parkinson_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) volatility(cbind(open, high, low, close), n = w, calc = "parkinson")),
             by = symbol]
@@ -205,13 +247,6 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, close_above_vwap_200 := (close - TTR::VWAP(close, volume, n = 200)) / TTR::VWAP(close, volume, n = 200),
             by = symbol]
 
-      # rolling volume
-      # new_cols <- paste0("volume_", windows_)
-      # ohlcv[, (new_cols) := lapply(windows_, function(w) frollmean(volume / 1000, n = w, na.rm = TRUE)), by = symbol]
-      new_cols <- paste0("volume_rate_", c(1:3, windows_))
-      ohlcv[, (new_cols) := lapply(c(1:3, windows_), function(w) (volume + 1) / (shift(volume, n = w) + 1) - 1),
-            by = symbol]
-
       # rolling linear regression model: y = 1 + date + e NOT THAT GOOD AFTER ALL ?
       print("Calculate rolling lin regression.")
       new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
@@ -224,9 +259,11 @@ OhlcvFeatures = R6::R6Class(
       ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
 
       # rolling sharpe ratio
+      print("Rolling sharpe")
       new_cols <- paste0("sharpe_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
                                                                                  na_method = "ignore"))), by = symbol]
+
       # rolling quantile substraction
       print("Calculate rolling quantile div")
       generate_quantile_divergence <- function(ohlcv, p = 0.99, window_sizes = self$quantile_divergence_window) {
@@ -243,30 +280,32 @@ OhlcvFeatures = R6::R6Class(
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.75)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
-      # support / resistance (TODO too slow)
-      # print("Calculate rolling support / resistance.")
-      # ohlcv[, close_round := round(close, 1)]
-      # windows__ <- unique(c(windows_, 200, 500))
-      # new_cols <- paste0("rolling_mode_", windows__)
-      # baseMode <- function(x, narm = FALSE) {
-      #   if (narm) x <- x[!is.na(x)]
-      #   ux <- unique(x)
-      #   ux[which.max(table(match(x, ux)))]
-      # }
-      # ohlcv[, (new_cols) := lapply(windows__, function(w) frollapply(close_round, w, function(x) {
-      #   baseMode(x)
-      # })), by = symbol]
-      # new_cols_close <- paste0(new_cols, "_ratio")
-      # ohlcv[, (new_cols_close) := lapply(.SD, function(x) (close / x) - 1), .SDcols = new_cols]
-      # ohlcv[, close_round := NULL]
-      # ohlcv[, (new_cols) := NULL]
+      # OPENSOURCE AP --------------------------------------------------------
+      print("Open source asset pricing daily variation.")
 
-      # estimate changepoints breaks (fast = FALSE)
-      print("Structural break.")
-      for (i in c(370, 500, 1000, 5000)) {
-        ohlcv[, paste(c('breaks'), i, sep = '_') := self$get_changepoints(returns_1, method = 'Mood', i), by = .(symbol)]
-      }
+      # 52 week
+      print("52 week")
+      w_ = c(22 * 1:12)
+      new_cols <- paste0("ath_", w_)
+      ohlcv[, (new_cols) := lapply(w_,
+                                   function(w) close / frollapply(high, w, max, na.rm = TRUE)),
+            by = symbol]
+      tail(ohlcv[symbol == "aapl"], 50)
 
+      # maximum return
+      print("Rolling max returns")
+      ohlcv[, max_ret := frollapply(returns, 22, max, na.rm = TRUE), by = symbol]
+
+      # dolvol
+      print("DolVol")
+      ohlcv[, dolvolm := close * volume, by = symbol]
+      ohlcv[, dolvolm := frollsum(dolvolm, 22, na.rm=TRUE), by = symbol]
+      w_ = c(1,22 * 1:3)
+      new_cols <- paste0("dolvol_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
+      # mom12m already caluclated in my predictors
+
+      # MERGE ALL ---------------------------------------------------------------
       # keep only relevant columns
       if (!is.null(at_)) {
         keep_dates[, index := TRUE]
@@ -274,71 +313,10 @@ OhlcvFeatures = R6::R6Class(
                               by = c("symbol", "date"), all.x = TRUE, all.y = FALSE)
         ohlcv_sample <- ohlcv_sample[index == TRUE]
         ohlcv_sample[, index := NULL]
+        return(ohlcv_sample)
       } else {
-        ohlcv_sample <- copy(ohlcv)
+        return(ohlcv)
       }
-
-      return(ohlcv_sample)
-    },
-
-    #' @description
-    #' Helper function for calculating changepoints features
-    #'
-    #' @param returns Returns column.
-    #' @param method Argument method from cpm package
-    #' @param ARL0 Argument ARL0 from cpm package
-    #' @param startup Argument sartup from cpm package
-    #'
-    #' @return Data.table with new features.
-    get_changepoints = function(returns, method, arl0) {
-      # change points roll
-      detectiontimes <- numeric()
-      changepoints <- numeric()
-      cpm <- cpm::makeChangePointModel(cpmType=method, ARL0=arl0, startup=200)
-      i <- 0
-      while (i < length(returns)) {
-
-        i <- i + 1
-
-        # if returns is na returns FALSE
-        if (is.na(returns[i])) {
-          next()
-        }
-
-        # process each observation in turn
-        cpm <- cpm::processObservation(cpm, returns[i])
-
-        # if a change has been found, log it, and reset the CPM
-        if (changeDetected(cpm) == TRUE) {
-          detectiontimes <- c(detectiontimes,i)
-
-          # the change point estimate is the maximum D_kt statistic
-          Ds <- cpm::getStatistics(cpm)
-          tau <- which.max(Ds)
-          if (length(changepoints) > 0) {
-            tau <- tau + changepoints[length(changepoints)]
-          }
-          changepoints <- c(changepoints,tau)
-
-          # reset the CPM
-          cpm <- cpm::cpmReset(cpm)
-
-          #resume monitoring from the observation following the change point
-          i <- tau
-        }
-      }
-      points <- cbind.data.frame(detectiontimes, changepoints)
-      breaks <- rep(FALSE, length(returns))
-      breaks[detectiontimes] <- TRUE
-      # change <- rep(FALSE, length(returns))
-      # change[changepoints] <- TRUE
-      # return(cbind.data.frame(breaks, change))
-      return(breaks)
     }
   )
 )
-
-# is.infinite.data.frame <- function(x) do.call(cbind, lapply(x, is.infinite))
-# keep_cols <- names(which(colMeans(!is.infinite(as.data.frame(clf_data))) > 0.999))
-# print(paste0("Removing columns with Inf values: ", setdiff(colnames(clf_data), keep_cols)))
-# clf_data <- clf_data[, .SD, .SDcols = keep_cols]

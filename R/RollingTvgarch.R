@@ -4,23 +4,23 @@
 #' Function calculates tvgarch predictions and coefficients from tvgarch package on rolling window.
 #'
 #' @export
-#' @examples
-#' data(spy_hour)
-#' OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-#' RollingTvgarchInit = RollingTvgarch$new(windows = 200,
-#'                                         workers = 1L,
-#'                                         at = c(300, 500),
-#'                                         lag = 0L,
-#'                                         turbo = TRUE)
-#' x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
-#' head(x)
-#' RollingTvgarchInit = RollingTvgarch$new(windows = 200,
-#'                                         workers = 2L,
-#'                                         at = c(300, 500),
-#'                                         lag = 0L,
-#'                                         turbo = c(TRUE, FALSE))
-#' x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
-#' head(x)
+# @examples
+# data(spy_hour)
+# OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
+# RollingTvgarchInit = RollingTvgarch$new(windows = 200,
+#                                         workers = 1L,
+#                                         at = c(300, 500),
+#                                         lag = 0L,
+#                                         turbo = TRUE)
+# x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
+# head(x)
+# RollingTvgarchInit = RollingTvgarch$new(windows = 200,
+#                                         workers = 2L,
+#                                         at = c(300, 500),
+#                                         lag = 0L,
+#                                         turbo = c(TRUE, FALSE))
+# x = RollingTvgarchInit$get_rolling_features(OhlcvInstance)
+# head(x)
 RollingTvgarch = R6::R6Class(
   "RollingTvgarch",
   inherit = RollingGeneric,

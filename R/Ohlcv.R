@@ -49,7 +49,7 @@ Ohlcv = R6::R6Class(
       X_ = as.data.table(self$X)
       self$X = copy(X_)
 
-      # create  retuyrns columns
+      # create  returns columns
       self$X[, returns := get(price) / shift(get(price)) - 1 ]
 
       # change columns names

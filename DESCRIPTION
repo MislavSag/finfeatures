@@ -42,6 +42,7 @@ Suggests:
     theft,
     WaveletArima,
     binomialtrend,
+    tsDyn,
     roxygen2,
     devtools,
     knitr,

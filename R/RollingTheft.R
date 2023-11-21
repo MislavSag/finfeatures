@@ -94,13 +94,17 @@ RollingTheft = R6::R6Class(
       # x = x[, .(symbol, date, close)]
 
       # calculate features
-      y <- data.table::as.data.table(theft::calculate_features(x,
-                                                   "symbol",
-                                                   "date",
-                                                   price_col,
-                                                   feature_set = params,
-                                                   tsfresh_cleanup = TRUE)[[1]])
-      y[, var_names := paste(method, names, window, sep = "_")]
+      y <- data.table::as.data.table(
+        theft::calculate_features(
+          x,
+          "symbol",
+          "date",
+          price_col,
+          feature_set = params,
+          tsfresh_cleanup = TRUE
+        )[[1]]
+      )
+      y[, var_names := paste(paste0(params, collapse = "_"), names, window, sep = "_")]
       y <- data.table::transpose(y[, .(var_names, values)], make.names = TRUE)
       results <- data.table::as.data.table(y)
 
@@ -135,9 +139,7 @@ RollingTheft = R6::R6Class(
 #                                     workers = 1L,
 #                                     at = c(300, 500),
 #                                     lag = 0L,
-#                                     na_pad = TRUE,
-#                                     simplify = FALSE,
-#                                     features_set = "tsfresh")
+#                                     features_set = "catch22")
 # x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 # head(x)
 #
@@ -175,7 +177,7 @@ RollingTheft = R6::R6Class(
 #                                      feature_set = "TSFEL",
 #                                      seed = 123)
 #
-# feature_matrix <- calculate_features(data = simData[id == "ARMA(1,1)_30"],
+# feature_matrix <- calculate_features(data = simData,
 #                                      id_var = "id",
 #                                      time_var = "timepoint",
 #                                      values_var = "values",

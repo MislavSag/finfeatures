@@ -1,7 +1,7 @@
 #' @title RollingGpd Class
 #'
 #' @description
-#' Function calculates GPD risk measures on rolling window from ptsuite pakcage.
+#' Function calculates GPD risk measures on rolling window from ptsuite package.
 #'
 #' @export
 #' @examples

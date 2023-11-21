@@ -34,7 +34,7 @@ Data.table with new features
 Calculate rolling radf features from exuber package.
 }
 \description{
-Function calculates GPD risk measures on rolling window from ptsuite pakcage.
+Function calculates GPD risk measures on rolling window from ptsuite package.
 
 Create a new RollingGpd object.
 
