@@ -10,7 +10,7 @@
 
 \item{quantile_divergence_window}{Window sizes from divergence from quantiles indicator.}
 
-\item{data}{X field of Ohlcv object.}
+\item{ohlcv}{X field of Ohlcv object.}
 }
 \value{
 A new `RollingGpd` object.
@@ -34,12 +34,3 @@ Function calculates basic features from OHLCV financial data
 \item{\code{quantile_divergence_window}}{Window sizes from divergence from quantiles indicator.}
 }}
 
-\examples{
-data(spy_hour)
-OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-RollingOhlcvFeatures = OhlcvFeatures$new(at = NULL,
-                                         windows = c(200, 300),
-                                         quantile_divergence_window =  c(100, 200))
-x = RollingOhlcvFeatures$get_ohlcv_features(OhlcvInstance)
-tail(x)
-}
