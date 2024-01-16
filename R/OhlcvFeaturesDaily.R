@@ -126,10 +126,10 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # additional checks
       testSubset(c("symbol", "open", "high", "low", "close"), colnames(ohlcv))
-      assert_double(ohlcv$open, lower = 1e-005)
-      assert_double(ohlcv$high, lower = 1e-005)
-      assert_double(ohlcv$low, lower = 1e-005)
-      assert_double(ohlcv$close, lower = 1e-005)
+      assert_double(ohlcv$open, lower = 1e-008)
+      assert_double(ohlcv$high, lower = 1e-008)
+      assert_double(ohlcv$low, lower = 1e-008)
+      assert_double(ohlcv$close, lower = 1e-008)
 
       # keep only rows we nedd for calculation, to make calculation faster
       if (!is.null(at_)) {
