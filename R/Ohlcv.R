@@ -61,7 +61,7 @@ Ohlcv = R6::R6Class(
 
       # check price
       if (self$price == "close") {
-        assert_double(self$X[, get(price)], lower = 1e-005)
+        assert_double(self$X[, get(price)], lower = 1e-008)
       }
     }
   )
