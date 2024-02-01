@@ -95,7 +95,7 @@ RollingGeneric = R6::R6Class(
           parallel::clusterExport(cl, c("data"), envir = environment())
           parallel::clusterCall(cl, function() lapply(self$packages, require, character.only = TRUE))
         } else if (.Platform$OS.type == "unix") {
-          cl = makeForkCluster(nnodes=self$workers)
+          cl <- parallel::makeForkCluster(nnodes=self$workers)
         }
       } else {
         cl <- NULL

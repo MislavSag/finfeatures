@@ -56,7 +56,8 @@ RollingFracdiffInit = RollingFracdiff$new(windows = 200,
                                           at = c(300, 500),
                                           lag = 0L,
                                           nar = 1,
-                                          nma = 1)
+                                          nma = 1,
+                                          bandw_exp = c(0.1, 0.2))
 x = RollingFracdiffInit$get_rolling_features(OhlcvInstance)
 head(x)
 }

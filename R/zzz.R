@@ -6,6 +6,7 @@
 #' @import RollingWindow
 #' @import lgr
 #' @import doParallel
+#' @import parallel
 #' @import yaml
 #' @import cpm
 #' @importFrom R6 R6Class is.R6
