@@ -90,10 +90,13 @@ RollingGeneric = R6::R6Class(
 
       # start cluser if workers greater than 1
       if (self$workers > 1) {
-        cl <- parallel::makeCluster(self$workers)
-        # registerDoParallel(cl)
-        parallel::clusterExport(cl, c("data"), envir = environment())
-        parallel::clusterCall(cl, function() lapply(self$packages, require, character.only = TRUE))
+        if (.Platform$OS.type == "windows") {
+          cl = parallel::makeCluster(self$workers)
+          parallel::clusterExport(cl, c("data"), envir = environment())
+          parallel::clusterCall(cl, function() lapply(self$packages, require, character.only = TRUE))
+        } else if (.Platform$OS.type == "unix") {
+          cl = makeForkCluster(nnodes=self$workers)
+        }
       } else {
         cl <- NULL
       }
