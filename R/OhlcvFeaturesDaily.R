@@ -122,7 +122,11 @@ OhlcvFeaturesDaily = R6::R6Class(
       # }
       # setkey(ohlcv, "symbol") # change sort !
       windows_ = self$windows
-      at_ = self$at
+      if (is.null(self$at)) {
+        at_ = 1:nrow(ohlcv)
+      } else {
+        at_ = self$at
+      }
 
       # additional checks
       testSubset(c("symbol", "open", "high", "low", "close"), colnames(ohlcv))
@@ -135,7 +139,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       if (!is.null(at_)) {
         keep_dates <- ohlcv[at_, .(symbol, date)]
         # keep_indecies <- lapply(at_, function(x) (max(x - max(windows_), 1)):(min(x + max(windows_), nrow(ohlcv))))
-        keep_indecies <- lapply(at_, function(x) (max(x - max(c(windows_, quantile_divergence_window)), 1)):x)
+        keep_indecies <- lapply(at_, function(x) (max(x - max(c(windows_, self$quantile_divergence_window)), 1)):x)
         keep_indecies <- unique(unlist(keep_indecies))
         ohlcv <- ohlcv[keep_indecies]
       }
