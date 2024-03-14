@@ -25,7 +25,8 @@ Imports:
     RollingWindow,
     QuantTools, 
     yaml,
-    cpm
+    cpm,
+    bidask
 Remotes:
     andrewuhl/RollingWindow,
     bitbucket::quanttools/quanttools
@@ -38,7 +39,6 @@ Suggests:
     quarks,
     ptsuite,
     tsfeatures,
-    bidask,
     backCUSUM,
     theft,
     WaveletArima,

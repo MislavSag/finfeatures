@@ -82,31 +82,31 @@ OhlcvFeaturesDaily = R6::R6Class(
       # at_ <- NULL
 #
 #       # 2) ZSE PRICES
-#       library(data.table)
-#       library(finfeatures)
-#       library(checkmate)
-#       library(TTR)
-#       library(RollingWindow)
-#       library(QuantTools)
-#       library(PerformanceAnalytics)
-#       library(TTR)
-#       library(RollingWindow)
-#       library(lubridate)
-#       prices = fread("F:/zse/prices.csv")
-#       prices[, change := NULL]
-#       prices = prices[date >= "2000-01-01"]
-#       prices = unique(prices, by = c("isin", "date"))
-#       isin_keep = prices[, .N, isin][N >= 2 * 252, isin]
-#       prices = prices[isin %chin% isin_keep]
-#       prices[is.na(close), close := average]
-#       setorder(prices, isin, date)
-#       prices[, date := as.IDate(date)]
-#       prices[, month := round(date, digits = "month")]
-#       prices[, month := ceiling_date(month, unit = "month") - 1]
-#       prices[, last_month_day := tail(date, 1) == date, by = month]
-#       windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 500)
-#       setnames(prices, c("isin"), c("symbol"))
-#       ohlcv = copy(prices)
+      # library(data.table)
+      # library(finfeatures)
+      # library(checkmate)
+      # library(TTR)
+      # library(RollingWindow)
+      # library(QuantTools)
+      # library(PerformanceAnalytics)
+      # library(TTR)
+      # library(RollingWindow)
+      # library(lubridate)
+      # prices = fread("F:/zse/prices.csv")
+      # prices[, change := NULL]
+      # prices = prices[date >= "2000-01-01"]
+      # prices = unique(prices, by = c("isin", "date"))
+      # isin_keep = prices[, .N, isin][N >= 2 * 252, isin]
+      # prices = prices[isin %chin% isin_keep]
+      # prices[is.na(close), close := average]
+      # setorder(prices, isin, date)
+      # prices[, date := as.IDate(date)]
+      # prices[, month := round(date, digits = "month")]
+      # prices[, month := ceiling_date(month, unit = "month") - 1]
+      # prices[, last_month_day := tail(date, 1) == date, by = month]
+      # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 500)
+      # setnames(prices, c("isin"), c("symbol"))
+      # ohlcv = copy(prices)
       ###### DEBUG ######
 
       # checks
@@ -168,7 +168,26 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols <- paste0("volume_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
-      # whole number discrepancy
+      # Calculate bidask from bidask package
+      print("BidAsk spread")
+      to_title_case = function(dt) {
+        setnames(dt, tools::toTitleCase(colnames(dt)))
+        return(dt)
+      }
+      for (p in c("EDGE", "OHL", "OHLC", "AR", "AR2", "CS", "CS2", "ROLL")) {
+        ohlcv = ohlcv[, as.data.table(spread(as.xts.data.table(to_title_case(.SD)),
+                                             width = 100,
+                                             method = p
+        )),
+        by = symbol,
+        .SDcols = c("date", "open", "high", "low", "close")][
+          ohlcv, on = c("symbol" = "symbol", "index" = "date")
+        ]
+        setnames(ohlcv, "index", "date")
+        setnames(ohlcv, p, paste0("bidask_", tolower(p)))
+      }
+
+      # Whole number discrepancy
       print("Calculate whole number discrepancy.")
       ohlcv[, pretty_1 := fcase(
         close < 0.1, ceiling(close * 100) / 100,
