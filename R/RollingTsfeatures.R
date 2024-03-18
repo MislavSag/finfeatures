@@ -77,20 +77,43 @@ RollingTsfeatures = R6::R6Class(
         return(NA)
       }
 
+      # debug
+      # x = as.data.table(spy_hour)
+      # x = x[, .(symbol, datetime, close)]
+      # setnames(x, "datetime", "date")
+      # params = TRUE
+      # price_col = "close"
+
       # remove spreadrandomlocal_meantaul because of error:
       # This time series is too short. Specify proper segment length in `l`
       # IF GETTING ABOVE ERROR, INSTALL DEVELOPMENT VERSION OF THE PACKAGE, SEE
       # MY ISSUE ON GITHUB.
-      featureList <- c("stl_features", "entropy", "acf_features",
-                       "compengine", "arch_stat", "crossing_points", "flat_spots",
+      # Feature list: https://cran.r-project.org/web/packages/tsfeatures/vignettes/tsfeatures.html
+      featureList <- c("acf_features",
+                       "arch_stat",
+                       # "autocorr_features", # available in other packages
+                       # "binarize_mean", # ERROR
+                       "crossing_points",
+
+                       "entropy",
+                       "compengine", "flat_spots",
                        "heterogeneity", "holt_parameters", "hurst",
                        "lumpiness", "max_kl_shift", "max_level_shift", "max_var_shift",
-                       "nonlinearity", "pacf_features", "stability", "unitroot_kpss",
-                       "unitroot_pp", "embed2_incircle", "firstzero_ac",
-                       "histogram_mode", "localsimple_taures", "sampenc")
-      y <- as.data.table(tsfeatures::tsfeatures(x[, get(price_col)],
-                                                features = featureList,
-                                                scale = params))
+                       "nonlinearity", "stability",
+                       "embed2_incircle", "firstzero_ac",
+                       "histogram_mode", "localsimple_taures", "sampenc",
+                       "pacf_features",
+                       # "pred_features", # 2 more seconds
+                       # "scal_features", # 2 more seconds
+                       "station_features",
+                       "stl_features",
+                       "unitroot_kpss",
+                       "unitroot_pp"
+                       # "zero_proportion" # Don't see how this can be usefull
+                       )
+      y = as.data.table(tsfeatures::tsfeatures(x[, get(price_col)],
+                                               features = featureList,
+                                               scale = params))
       colnames(y) <- paste(colnames(y), window, params, sep = "_")
       colnames(y) <- gsub(" |-", "_", colnames(y))
       y

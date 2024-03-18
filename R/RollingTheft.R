@@ -91,22 +91,23 @@ RollingTheft = R6::R6Class(
 
       # debug
       # x = as.data.table(spy_hour)
-      # x = x[, .(symbol, date, close)]
+      # x = x[, .(symbol, datetime, close)]
+      # setnames(x, "datetime", "date")
+      # params = c("catch22", "feasts")
 
       # calculate features
-      y <- data.table::as.data.table(
-        theft::calculate_features(
+      y = data.table::as.data.table(
+        theftms::calculate_features(
           x,
           "symbol",
           "date",
           price_col,
-          feature_set = params,
-          tsfresh_cleanup = TRUE
-        )[[1]]
+          feature_set = params
+        )
       )
-      y[, var_names := paste(paste0(params, collapse = "_"), names, window, sep = "_")]
-      y <- data.table::transpose(y[, .(var_names, values)], make.names = TRUE)
-      results <- data.table::as.data.table(y)
+      y[, var_names := paste(feature_set, names, window, sep = "_")]
+      y = data.table::transpose(y[, .(var_names, values)], make.names = TRUE)
+      results = data.table::as.data.table(y)
 
       # chamnge column names to fit to mlr3
       colnames(results) <- gsub(" |-", "_", colnames(results))
@@ -115,7 +116,7 @@ RollingTheft = R6::R6Class(
     }
   ),
   private = list(
-    packages = "theft",
+    packages = "theftms",
     params = NULL
   )
 )
@@ -123,14 +124,18 @@ RollingTheft = R6::R6Class(
 ######### DEBUG ###########
 # library(reticulate)
 # library(finfeatures)
-# library(theft)
-# reticulate::use_python("C:/ProgramData/Anaconda3/envs/mlfinlabenv/python.exe", required = TRUE)
-# mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
-# pd = reticulate::import("pandas", convert = FALSE)
+# # library(theft)
+# library(theftms)
+# reticulate::use_virtualenv("C:/Users/Mislav/projects_py/pyquant", required = TRUE)
+# # mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
+# # pd = reticulate::import("pandas", convert = FALSE)
 # builtins = import_builtins(convert = FALSE)
 # main = import_main(convert = FALSE)
-# tsfel = reticulate::import("tsfel", convert = FALSE)
+# # tsfel = reticulate::import("tsfel", convert = FALSE)
 # tsfresh = reticulate::import("tsfresh", convert = FALSE)
+# warnigns = reticulate::import("warnings", convert = FALSE)
+# warnigns$filterwarnings('ignore')
+#
 #
 # data(spy_hour)
 # OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
@@ -177,10 +182,17 @@ RollingTheft = R6::R6Class(
 #                                      feature_set = "TSFEL",
 #                                      seed = 123)
 #
-# feature_matrix <- calculate_features(data = simData,
-#                                      id_var = "id",
-#                                      time_var = "timepoint",
-#                                      values_var = "values",
-#                                      # group_var = "process",
-#                                      feature_set = "tsfresh",
-#                                      seed = 123)
+# options(progress_enabled = FALSE)
+# system.time({
+#   feature_matrix <- suppressWarnings(
+#     calculate_features(data = simData[1:250, ],
+#                        id_var = "id",
+#                        time_var = "timepoint",
+#                        values_var = "values",
+#                        # group_var = "process",
+#                        feature_set = "tsfresh",
+#                        seed = 123)
+#   )
+# })
+#
+# (0.5 * 50000 / 60) / 60 / 24
