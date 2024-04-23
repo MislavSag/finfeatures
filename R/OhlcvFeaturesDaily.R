@@ -80,8 +80,8 @@ OhlcvFeaturesDaily = R6::R6Class(
       # self = list()
       # self$quantile_divergence_window =  c(50, 100)
       # at_ <- NULL
-#
-#       # 2) ZSE PRICES
+      #
+      # # 2) ZSE PRICES
       # library(data.table)
       # library(finfeatures)
       # library(checkmate)
@@ -107,6 +107,24 @@ OhlcvFeaturesDaily = R6::R6Class(
       # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 500)
       # setnames(prices, c("isin"), c("symbol"))
       # ohlcv = copy(prices)
+
+      # 3) intraday
+      # data(spy_hour)
+      # data(stocks)
+      # library(data.table)
+      # library(finfeatures)
+      # library(checkmate)
+      # library(TTR)
+      # library(RollingWindow)
+      # library(QuantTools)
+      # library(PerformanceAnalytics)
+      # library(TTR)
+      # library(RollingWindow)
+      # ohlcv <- as.data.table(stocks)
+      # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
+      # self = list()
+      # self$quantile_divergence_window =  c(50, 100)
+      # at_ <- NULL
       ###### DEBUG ######
 
       # checks
@@ -144,13 +162,13 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv <- ohlcv[keep_indecies]
       }
 
-
       # MY PREDICTORS -----------------------------------------------------------
       print("My predictors.")
 
       # returns
       print("Calculate returns")
       w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      w_ = sort(unique(c(windows_, w_)))
       new_cols <- paste0("returns_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
 
@@ -160,11 +178,15 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # minimum return
       print("Rolling min returns")
-      ohlcv[, min_ret := frollapply(returns_1, 22, min, na.rm = TRUE), by = symbol]
+      new_cols = paste0("min_ret_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(n) {
+        frollapply(returns_1, n, min, na.rm = TRUE)
+      }), by = symbol]
 
       # volumes
       print("Volume percent changes")
       w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      w_ = sort(unique(c(windows_, w_)))
       new_cols <- paste0("volume_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
 
@@ -363,7 +385,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       # percent rank
       new_cols <- paste0("percent_rank_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) QuantTools::roll_percent_rank(close, n = w)), by = symbol]
-      # tail(TTR::(ohlcv[, .(high, low, close)], ohlcv$volume))
 
       # trading rules
       print("Calculate trading rules.")
@@ -412,9 +433,11 @@ OhlcvFeaturesDaily = R6::R6Class(
         return(ohlcv)
       }
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.01)
+      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.05)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.25)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.5)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.75)
+      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.95)
       ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
 
       # OPENSOURCE AP --------------------------------------------------------

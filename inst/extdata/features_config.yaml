@@ -1,13 +1,18 @@
+defaults: &defaults
+  at: NULL
+  lag: &defaultLag 1
+
 RollingExuber:
- windows :
+ windows:
   - 50
   - 100
- workers : 4
- lag : 1
- at : NULL
- na_pad: TRUE
- simplify: FALSE
- exuber_lag: 0
+ workers: 4
+ lag: *defaultLag
+ at: NULL
+ exuber_lag:
+  - 1
+  - 2
+
 RollingForecasts:
  windows :
   - 252
