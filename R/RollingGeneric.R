@@ -88,7 +88,7 @@ RollingGeneric = R6::R6Class(
         data[, (cols) := lapply(.SD, log), .SDcols = cols]
       }
 
-      # start cluser if workers greater than 1
+      # start cluster if workers greater than 1
       if (self$workers > 1) {
         if (.Platform$OS.type == "windows") {
           cl = parallel::makeCluster(self$workers)
@@ -106,7 +106,7 @@ RollingGeneric = R6::R6Class(
         # params
         params_ <- private$params[i, ]
 
-        # calculate exuber for param
+        # calculate rolling predictors for parameters
         data[self$at, cbind(symbol, date, do.call(cbind, lapply(self$windows, function(w) {
           rbindlist(lapply(runner(
             x = copy(data),
@@ -131,7 +131,7 @@ RollingGeneric = R6::R6Class(
         # stopImplicitCluster()
       }
 
-      # add log to colnames if used
+      # add log to column names if used
       if (log_prices) {
         colnames(predictors)[3:ncol(predictors)] <- paste0(colnames(predictors)[3:ncol(predictors)], "_log")
       }

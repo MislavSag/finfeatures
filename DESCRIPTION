@@ -22,13 +22,13 @@ Imports:
     roll,
     reticulate,
     future,
-    RollingWindow,
     QuantTools, 
     yaml,
     cpm,
-    bidask
+    bidask,
+    RollingWindow
 Remotes:
-    andrewuhl/RollingWindow,
+    MislavSag/RollingWindowms,
     bitbucket::quanttools/quanttools
 Suggests:
     exuber,
@@ -43,6 +43,7 @@ Suggests:
     theft,
     theftms,
     WaveletArima,
+    fracdiff,
     binomialtrend,
     tsDyn,
     roxygen2,
