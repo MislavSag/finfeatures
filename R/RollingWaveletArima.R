@@ -108,9 +108,9 @@ RollingWaveletArima = R6::R6Class(
                                             MaxMAParam = params$MaxMAParam,
                                             NForecast = params$NForecast)
       forecasts <- data.table::as.data.table(t(y$Finalforecast))
-      colnames(forecasts) <- paste0("WaveletFittingarma_forecasts_", seq_along(forecasts))
-      forecasts[, WaveletFittingarma_forecasts_mean := mean(y$Finalforecast)]
-      forecasts[, WaveletFittingarma_forecasts_sd := sd(y$Finalforecast)]
+      colnames(forecasts) <- paste0("WaveletFittingarma_forecasts_", seq_along(forecasts), "_", window)
+      forecasts[, paste0("WaveletFittingarma_forecasts_mean", "_", window) := mean(y$Finalforecast)]
+      forecasts[, paste0("WaveletFittingarma_forecasts_sd", "_", window) := sd(y$Finalforecast)]
       forecasts
     }
   ),
