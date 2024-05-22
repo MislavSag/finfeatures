@@ -63,10 +63,7 @@ RollingTheft = R6::R6Class(
       )
 
       # DEBUGE - set python path
-      # library(reticulate)
-      # reticulate::use_python("C:/ProgramData/Anaconda3/envs/mlfinlabenv/python.exe", required = TRUE)
-      # mlfinlab = reticulate::import("mlfinlab", convert = FALSE)
-      # pd = reticulate::import("pandas", convert = FALSE)
+      # use_virtualenv("C:/Users/Mislav/projects_py/pyquant")
       # builtins = import_builtins(convert = FALSE)
       # main = import_main(convert = FALSE)
       # tsfel = reticulate::import("tsfel", convert = FALSE)

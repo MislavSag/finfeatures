@@ -123,7 +123,8 @@ RollingGeneric = R6::R6Class(
                            predictors_l)
 
       # clean column names
-      colnames(predictors) <- gsub(" |-|\\.", "_", colnames(predictors))
+      colnames(predictors) <- gsub(" |-|\\.|\"", "_", colnames(predictors))
+      colnames(predictors) <- gsub("__", "_", colnames(predictors))
 
       # stop connection
       if (self$workers > 1) {
