@@ -46,6 +46,7 @@ Suggests:
     fracdiff,
     binomialtrend,
     tsDyn,
+    vse4ts,
     roxygen2,
     devtools,
     knitr,

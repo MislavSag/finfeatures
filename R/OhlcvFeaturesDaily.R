@@ -59,7 +59,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(RollingWindow)
       # # import daily data
       # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
-      # ohlcv = fread("F:/lean_root/data/all_stocks_daily.csv", col.names = col)
+      # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col)
       # ohlcv = unique(ohlcv, by = c("symbol", "date"))
       # unadjustd_cols = c("open", "high", "low")
       # ohlcv[, (unadjustd_cols) := lapply(.SD, function(x) (close_adj / close) * x), .SDcols = unadjustd_cols]
@@ -74,7 +74,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # ohlcv = ohlcv[symbol %in% symbols_keep]
       # dim(ohlcv)
       # # ohlcv = Ohlcv$new(ohlcv, id_col = "symbol", date_col = "date")
-      #
+      
       # ohlcv <- as.data.table(stocks)
       # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
       # self = list()
