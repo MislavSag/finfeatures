@@ -54,7 +54,7 @@ RollingGeneric = R6::R6Class(
     #'
     #' @param x Ohlcv object.
     #' @param window Rolling window lengths.
-    #' @param price_col Prcie column in Ohlcv
+    #' @param price_col Price column in Ohlcv
     #' @param params Vector of parameters
     #'
     #' @return Depending on used classes for clalculating features. It returns df.
@@ -67,9 +67,10 @@ RollingGeneric = R6::R6Class(
     #'
     #' @param Ohlcv Ohlcv object
     #' @param log_prices If TRUE, we log OHLC.
+    #' @param price_col Price column in Ohlcv
     #'
     #' @return Depending on used classes for clalculating features. It returns df.
-    get_rolling_features = function(Ohlcv, log_prices = FALSE) {
+    get_rolling_features = function(Ohlcv, log_prices = FALSE, price_col = NULL) {
 
       # check if necessary packages are installed
       installed <- all(sapply(self$packages, requireNamespace, quietly = TRUE))
@@ -79,6 +80,9 @@ RollingGeneric = R6::R6Class(
         return(NULL)
       }
 
+      # Check if price_col is in columns of Ohlcv$X using checkmate package
+      assert_subset(price_col, colnames(Ohlcv$X))
+
       # get data
       data = copy(Ohlcv$X)
 
@@ -86,6 +90,11 @@ RollingGeneric = R6::R6Class(
       if (log_prices) {
         cols <- c("open", "high", "low", "close")
         data[, (cols) := lapply(.SD, log), .SDcols = cols]
+      }
+
+      # Price col
+      if (is.null(price_col)) {
+        price_col = Ohlcv$price
       }
 
       # start cluster if workers greater than 1
@@ -110,7 +119,7 @@ RollingGeneric = R6::R6Class(
         data[self$at, cbind(symbol, date, do.call(cbind, lapply(self$windows, function(w) {
           rbindlist(lapply(runner(
             x = copy(data),
-            f = function(x) self$rolling_function(x, w, Ohlcv$price, params_), # x, window, price_col, params
+            f = function(x) self$rolling_function(x, w, price_col, params_), # x, window, price_col, params
             k = w,
             lag = self$lag,
             at = self$at,

@@ -136,13 +136,15 @@ RollingTheft = R6::R6Class(
 #
 # data(spy_hour)
 # OhlcvInstance = Ohlcv$new(spy_hour, date_col = "datetime")
-# # catch22 features
+# catch22 features
 # RollingTheftInit = RollingTheft$new(windows = 200,
 #                                     workers = 1L,
 #                                     at = c(300, 500),
 #                                     lag = 0L,
 #                                     features_set = "catch22")
 # x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+# head(x)
+# x = RollingTheftInit$get_rolling_features(OhlcvInstance, price_col = "returns")
 # head(x)
 #
 #
@@ -193,3 +195,11 @@ RollingTheft = R6::R6Class(
 # })
 #
 # (0.5 * 50000 / 60) / 60 / 24
+# # theft with returns
+# RollingTheftInit = RollingTheft$new(windows = 200,
+#                                     workers = 1L,
+#                                     at = c(300, 500),
+#                                     lag = 0L,
+#                                     features_set = "catch22")
+# x = RollingTheftInit$get_rolling_features(OhlcvInstance)
+# head(x)
