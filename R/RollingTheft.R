@@ -200,6 +200,6 @@ RollingTheft = R6::R6Class(
 #                                     workers = 1L,
 #                                     at = c(300, 500),
 #                                     lag = 0L,
-#                                     features_set = "catch22")
+#                                     features_set = "tsfel")
 # x = RollingTheftInit$get_rolling_features(OhlcvInstance)
 # head(x)

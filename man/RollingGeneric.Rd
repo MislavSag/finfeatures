@@ -18,13 +18,13 @@
 
 \item{window}{Rolling window lengths.}
 
-\item{price_col}{Prcie column in Ohlcv}
-
 \item{params}{Vector of parameters}
 
 \item{Ohlcv}{Ohlcv object}
 
 \item{log_prices}{If TRUE, we log OHLC.}
+
+\item{price_col}{Price column in Ohlcv}
 }
 \value{
 A new `RollingGeneric` object.
