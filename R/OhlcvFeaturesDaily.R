@@ -74,39 +74,11 @@ OhlcvFeaturesDaily = R6::R6Class(
       # ohlcv = ohlcv[symbol %in% symbols_keep]
       # dim(ohlcv)
       # # ohlcv = Ohlcv$new(ohlcv, id_col = "symbol", date_col = "date")
-      
-      # ohlcv <- as.data.table(stocks)
-      # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
+      # at = sample(1:nrow(ohlcv), 100000)
       # self = list()
+      # self$at = at
+      # self$windows = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
       # self$quantile_divergence_window =  c(50, 100)
-      # at_ <- NULL
-      #
-      # # 2) ZSE PRICES
-      # library(data.table)
-      # library(finfeatures)
-      # library(checkmate)
-      # library(TTR)
-      # library(RollingWindow)
-      # library(QuantTools)
-      # library(PerformanceAnalytics)
-      # library(TTR)
-      # library(RollingWindow)
-      # library(lubridate)
-      # prices = fread("F:/zse/prices.csv")
-      # prices[, change := NULL]
-      # prices = prices[date >= "2000-01-01"]
-      # prices = unique(prices, by = c("isin", "date"))
-      # isin_keep = prices[, .N, isin][N >= 2 * 252, isin]
-      # prices = prices[isin %chin% isin_keep]
-      # prices[is.na(close), close := average]
-      # setorder(prices, isin, date)
-      # prices[, date := as.IDate(date)]
-      # prices[, month := round(date, digits = "month")]
-      # prices[, month := ceiling_date(month, unit = "month") - 1]
-      # prices[, last_month_day := tail(date, 1) == date, by = month]
-      # windows_ = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 500)
-      # setnames(prices, c("isin"), c("symbol"))
-      # ohlcv = copy(prices)
 
       # 3) intraday
       # data(spy_hour)
@@ -130,21 +102,16 @@ OhlcvFeaturesDaily = R6::R6Class(
       # checks
       assert_class(ohlcv, "data.table")
 
-      # # prepare data
-      # if (test_class(data, "Ohlcv")) {
-      #   ohlcv <- as.data.table(ohlcv$X)
-      # } else if (test_class(dt, "data.table")) {
-      #
-      # } else {
-      #   stop("Argument data must be ofl class data.table or class Ohlcv.")
-      # }
-      # setkey(ohlcv, "symbol") # change sort !
+      # prepare data
+      setkey(ohlcv, "symbol")
       windows_ = self$windows
-      # if (is.null(self$at)) {
-      #   at_ = 1:nrow(ohlcv)
-      # } else {
-      at_ = self$at
-      # }
+      if (is.null(self$at)) {
+        at_ = 1:nrow(ohlcv)
+      } else {
+        at_ = self$at
+      }
+      setorder(ohlcv, symbol, date) # https://github.com/Rdatatable/data.table/issues/3456
+      ids = c("symbol", "date")
 
       # additional checks
       testSubset(c("symbol", "open", "high", "low", "close"), colnames(ohlcv))
@@ -153,15 +120,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       assert_double(ohlcv$low, lower = 1e-008)
       assert_double(ohlcv$close, lower = 1e-008)
 
-      # keep only rows we nedd for calculation, to make calculation faster
-      # if (!is.null(at_)) {
-      #   keep_dates <- ohlcv[at_, .(symbol, date)]
-      #   # keep_indecies <- lapply(at_, function(x) (max(x - max(windows_), 1)):(min(x + max(windows_), nrow(ohlcv))))
-      #   keep_indecies <- lapply(at_, function(x) (max(x - max(c(windows_, self$quantile_divergence_window)), 1)):x)
-      #   keep_indecies <- unique(unlist(keep_indecies))
-      #   ohlcv <- ohlcv[keep_indecies]
-      # }
-
       # MY PREDICTORS -----------------------------------------------------------
       print("My predictors.")
 
@@ -169,12 +127,19 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("Calculate returns")
       w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
       w_ = sort(unique(c(windows_, w_)))
-      new_cols <- paste0("returns_", w_)
+      new_cols = paste0("returns_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
+      if (!is.null(at_)) {
+        dt_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+      }
 
       # close ATH
       print("Close ATH")
       ohlcv[, close_ath := close / cummax(fifelse(is.na(high), -Inf, high)), by = symbol]
+      if (!is.null(at_)) {
+        dt_ath = ohlcv[at_, .SD, .SDcols = c(ids, "close_ath")]
+        ohlcv[, close_ath := NULL]
+      }
 
       # minimum return
       print("Rolling min returns")
@@ -182,31 +147,37 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := lapply(windows_, function(n) {
         frollapply(returns_1, n, min, na.rm = TRUE)
       }), by = symbol]
+      if (!is.null(at_)) {
+        dt_minret = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # volumes
       print("Volume percent changes")
       w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
       w_ = sort(unique(c(windows_, w_)))
-      new_cols <- paste0("volume_", w_)
+      new_cols = paste0("volume_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
-
-      # Calculate bidask from bidask package
-      print("BidAsk spread")
-      to_title_case = function(dt) {
-        setnames(dt, tools::toTitleCase(colnames(dt)))
-        return(dt)
+      if (!is.null(at_)) {
+        dt_volumes = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
       }
-      for (p in c("EDGE", "OHL", "OHLC", "AR", "AR2", "CS", "CS2", "ROLL")) {
-        ohlcv = ohlcv[, as.data.table(spread(as.xts.data.table(to_title_case(.SD)),
-                                             width = 100,
-                                             method = p
-        )),
-        by = symbol,
-        .SDcols = c("date", "open", "high", "low", "close")][
-          ohlcv, on = c("symbol" = "symbol", "index" = "date")
-        ]
-        setnames(ohlcv, "index", "date")
-        setnames(ohlcv, p, paste0("bidask_", tolower(p)))
+
+      # bid ask spread
+      methods_ = c("EDGE", "OHL", "OHLC", "AR", "AR2", "CS", "CS2", "ROLL")
+      ohlcv = ohlcv[, as.data.table(spread(
+        as.xts.data.table(.SD),
+        width = 150,
+        method = methods_
+      )),
+      by = symbol,
+      .SDcols = c("date", "Open" = "open", "High" = "high", "Low" = "low", "Close" = "close")][
+        ohlcv, on = c("symbol" = "symbol", "index" = "date")]
+      setnames(ohlcv, "index", "date")
+      setnames(ohlcv, methods_, paste0("bidask_", tolower(methods_)))
+      if (!is.null(at_)) {
+        dt_bidask = ohlcv[at_, .SD, .SDcols = c(ids, paste0("bidask_", tolower(methods_)))]
+        ohlcv[, paste0("bidask_", tolower(methods_)) := NULL]
       }
 
       # Whole number discrepancy
@@ -239,41 +210,77 @@ OhlcvFeaturesDaily = R6::R6Class(
       # ohlcv[pretty_1  == pretty_2]
       ohlcv[, pretty_1 := (close - pretty_1) / pretty_1]
       ohlcv[, pretty_2 := (close - pretty_2) / pretty_2]
+      if (!is.null(at_)) {
+        cols = colnames(ohlcv)[data.table::patterns("symbol|date|^pretty", cols = names(ohlcv))]
+        dt_pretty = ohlcv[at_, ..cols]
+        cols = colnames(ohlcv)[data.table::patterns("^pretty", cols = names(ohlcv))]
+        ohlcv[, (cols) := NULL]
+      }
 
       # rolling volatility
       print("Rolling volatility.")
-      new_cols <- paste0("sd_", windows_)
+      new_cols = paste0("sd_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_volatility = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # Close-to-Close Volatility
       print("OHLCV volatility.")
-      new_cols <- paste0("sd_parkinson_", windows_)
+      new_cols = paste0("sd_parkinson_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) volatility(cbind(open, high, low, close), n = w, calc = "parkinson")),
             by = symbol]
-      new_cols <- paste0("sd_rogers.satchell_", windows_)
+      if (!is.null(at_)) {
+        dt_parkinson = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = paste0("sd_rogers.satchell_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) {
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "rogers.satchell")},
                  error = function(e) NA)
       }), by = symbol]
-      new_cols <- paste0("sd_gk.yz_", windows_)
+      if (!is.null(at_)) {
+        dt_rogers = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = paste0("sd_gk.yz_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) {
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "gk.yz")},
                  error = function(e) NA)
       }), by = symbol]
-      new_cols <- paste0("sd_yang.zhang_", windows_)
+      if (!is.null(at_)) {
+        dt_gkyz = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+
+      new_cols = paste0("sd_yang.zhang_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) {
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "yang.zhang")},
                  error = function(e) NA)
       }), by = symbol]
+      if (!is.null(at_)) {
+        dt_yangzhang = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # rolling skewness
       print("Calculate moments.")
-      new_cols <- paste0("skew_", windows_)
-      ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSkew(returns_1, window = w, na_method = "ignore"))), by = symbol]
+      new_cols = paste0("skew_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSkew(returns_1, window = w, na_method = "ignore"))),
+            by = symbol]
+      if (!is.null(at_)) {
+        dt_skew = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # rolling kurtosis
-      new_cols <- paste0("kurtosis_", windows_)
+      new_cols = paste0("kurtosis_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingKurt(returns_1, window = w, na_method = "ignore"))), by = symbol]
+      if (!is.null(at_)) {
+        dt_kurtosis = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # rolling TA indicators
       print("Calculate technical indicators.")
@@ -284,13 +291,21 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(14, function(w) as.data.frame(ATR(cbind(high, low, close), n = w)[, c(1, 2)]))), by = symbol]
       new_new_cols = paste0(new_cols, "_closedv")
       ohlcv[, (new_new_cols) := lapply(.SD, function(x) x / close), .SDcols = new_cols]
+      if (!is.null(at_)) {
+        dt_atr = ohlcv[at_, .SD, .SDcols = c(ids, new_cols, new_new_cols)]
+        ohlcv[, c(new_cols, new_new_cols) := NULL]
+      }
       # BBANDS
       print("BBANDS")
-      new_cols <- expand.grid("bbands", c("dn", "mavg", "up", "pctB"), windows_)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      new_cols = expand.grid("bbands", c("dn", "mavg", "up", "pctB"), windows_)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(BBands(close, n = w)))), by = symbol]
       new_cols_change <- new_cols[grep("bbands.*up|bbands.*mavg|bbands.*dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) close / x), .SDcols = new_cols_change]
+      if (!is.null(at_)) {
+        dt_bbands = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, c(new_cols) := NULL]
+      }
       # chaikinAD
       print("chaikinAD")
       ohlcv[, ("chaikinad_one_window") := chaikinAD(cbind(high, low, close), volume), by = symbol]
@@ -300,33 +315,60 @@ OhlcvFeaturesDaily = R6::R6Class(
       # CLV
       print("CLV")
       ohlcv[, ("clv_one_window") := CLV(cbind(high, low, close)), by = symbol]
+      if (!is.null(at_)) {
+        cols_ = c("chaikinad_one_window", "chaikinVol_one_window", "clv_one_window")
+        dt_chaikin_clv = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, c(cols_) := NULL]
+      }
       # CMF
       print("CMF")
-      new_cols <- paste0("cmf_", windows_)
+      new_cols = paste0("cmf_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMF(cbind(high, low, close), volume, n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_cmf = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # CMO
       print("CMO")
-      new_cols <- paste0("cmo_", windows_)
+      new_cols = paste0("cmo_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMO(close, n = w)), by = symbol]
-      new_cols <- paste0("cmo_volume_", windows_)
+      if (!is.null(at_)) {
+        dt_cmo = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = paste0("cmo_volume_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMO(volume, n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_cmo_volume = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # CTI
       # TOO SLOW
       # new_cols <- paste0("cti_", windows_)
       # ohlcv[, (new_cols) := lapply(windows_, function(w) c(rep(NA, w-1), CTI(close, n = w))), by = symbol]
       # DonchianChannel
       print("Donchian Channel")
-      new_cols <- expand.grid("dochian", c("high", "mid", "low"), windows_)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(DonchianChannel(cbind(high, low), n = w)))), by = symbol]
+      new_cols = expand.grid("dochian", c("high", "mid", "low"), windows_)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(DonchianChannel(cbind(high, low), n = w)))),
+            by = symbol]
       ohlcv[, (new_cols) := lapply(.SD, function(x) close / x), .SDcols = new_cols]
+      if (!is.null(at_)) {
+        dt_dochian = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # DPO - look at warning in documentation
       # DVI
       print("DVI")
       windows__ = windows_[windows_ < 500]
-      new_cols <- expand.grid("dvi", c("dvi_mag", "dvi_str", "dvi"), windows__)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      ohlcv[, (new_cols) := do.call(cbind, lapply(windows__, function(w) as.data.frame(DVI(close, n = w)))), by = symbol]
+      new_cols = expand.grid("dvi", c("dvi_mag", "dvi_str", "dvi"), windows__)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(windows__, function(w) as.data.frame(DVI(close, n = w)))),
+            by = symbol]
+      if (!is.null(at_)) {
+        dt_dvi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # EMV - produces mostly Inf and Nan
       # GMMA
       print("GMMA")
@@ -335,56 +377,110 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := as.data.frame(GMMA(close)), by = symbol]
       ohlcv[, (new_cols) := lapply(.SD, function(x) close / x), .SDcols = new_cols]
+      if (!is.null(at_)) {
+        dt_gmma = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # keltnerChannels
       print("Keltner Channels")
-      new_cols <- expand.grid("keltnerchannels", c("dn", "mavg", "up"), windows_)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      new_cols = expand.grid("keltnerchannels", c("dn", "mavg", "up"), windows_)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(keltnerChannels(cbind(high, low, close), n = w)))),
             by = symbol]
       new_cols_change <- new_cols[grep("keltnerchannels.*up|keltnerchannels.*mavg|keltnerchannels.*dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) close / x), .SDcols = new_cols_change]
+      if (!is.null(at_)) {
+        dt_keltnerchannels = ohlcv[at_, .SD, .SDcols = c(ids, new_cols_change)]
+        ohlcv[, c(new_cols_change) := NULL]
+      }
       # KST
       print("KST")
       windows__ = windows_[-length(windows_)]
-      new_cols <- expand.grid("kst", c("kst", "signal"), windows__)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      new_cols = expand.grid("kst", c("kst", "signal"), windows__)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows__, function(w) as.data.frame(KST(close, n = ceiling(w / 2), nROC = w)))),
             by = symbol]
+      if (!is.null(at_)) {
+        dt_kst = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # MFI
       print("MFI")
-      new_cols <- paste0("mfi_", windows_)
+      new_cols = paste0("mfi_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) MFI(cbind(high, low, close), volume, n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_mfi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # RSI
       print("RSI")
-      new_cols <- paste0("rsi_", windows_)
+      new_cols = paste0("rsi_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) rsi(close, n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_rsi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # ADX
       # set window to 14 because I get error otherwise
-      new_cols <- expand.grid("adx", c("dip", "din", "dx", "adx"), 14)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      ohlcv[, (new_cols) := do.call(cbind, lapply(14, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))), by = symbol]
-      new_cols <- expand.grid("adx", c("dip", "din", "dx", "adx"), 22 * 3)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
-      ohlcv[, (new_cols) := do.call(cbind, lapply(22 * 3, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))), by = symbol]
+      new_cols = expand.grid("adx", c("dip", "din", "dx", "adx"), 14)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(14, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))),
+            by = symbol]
+      if (!is.null(at_)) {
+        dt_adx = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = expand.grid("adx", c("dip", "din", "dx", "adx"), 22 * 3)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      ohlcv[, (new_cols) := do.call(cbind, lapply(22 * 3, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))),
+            by = symbol]
+      if (!is.null(at_)) {
+        dt_adx_22_3 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # CCI
-      new_cols <- paste0("cci_", windows_)
+      new_cols = paste0("cci_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CCI(cbind(high, low, close), n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_cci = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # OBV
       ohlcv[, ("obv") := OBV(close, volume), by = symbol]
+      if (!is.null(at_)) {
+        dt_obv = ohlcv[at_, .SD, .SDcols = c(ids, "obv")]
+        ohlcv[, ("obv") := NULL]
+      }
       # SAR
       ohlcv[, ("sar") := as.vector(SAR(cbind(high, close))), by = symbol]
       ohlcv[, ("sar") := close / sar]
+      if (!is.null(at_)) {
+        dt_sar = ohlcv[at_, .SD, .SDcols = c(ids, "sar")]
+        ohlcv[, ("sar") := NULL]
+      }
       # WPR
-      new_cols <- paste0("wpr_", windows_)
+      new_cols = paste0("wpr_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) WPR(cbind(high, low, close))), by = symbol]
+      if (!is.null(at_)) {
+        dt_wpr = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
       # AROON
-      new_cols <- expand.grid("aroon", c("aroonUp", "aroonDn", "oscillator"), windows_)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      new_cols = expand.grid("aroon", c("aroonUp", "aroonDn", "oscillator"), windows_)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(aroon(cbind(high, low), n = w)))), by = symbol]
+      if (!is.null(at_)) {
+        dt_aroon = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # percent rank
-      new_cols <- paste0("percent_rank_", windows_)
+      new_cols = paste0("percent_rank_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) QuantTools::roll_percent_rank(close, n = w)), by = symbol]
+      if (!is.null(at_)) {
+        dt_percent_rank = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # trading rules
       print("Calculate trading rules.")
@@ -404,23 +500,39 @@ OhlcvFeaturesDaily = R6::R6Class(
             by = symbol]
       ohlcv[, close_above_vwap_200 := (close - TTR::VWAP(close, volume, n = 200)) / TTR::VWAP(close, volume, n = 200),
             by = symbol]
+      if (!is.null(at_)) {
+        cols_ = c("close_above_sma200", "close_above_sma100", "close_above_sma50", "close_above_sma22",
+                  "ema_above_sma200", "ema_above_sma100", "close_above_vwap_20", "close_above_vwap_50",
+                  "close_above_vwap_100", "close_above_vwap_200")
+        dt_trading_rules = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, c(cols_) := NULL]
+      }
 
       # rolling linear regression model: y = 1 + date + e NOT THAT GOOD AFTER ALL ?
       print("Calculate rolling lin regression.")
-      new_cols <- expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
-      new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
+      new_cols = expand.grid("lm", c("cf1", "cf2", "r2", "std1", "std2"), windows_)
+      new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind,
                                     lapply(windows_,
                                            function(w) as.data.frame(as.data.table(roll::roll_lm(1:length(close), log(close), width = w))))),
             by = symbol]
-      cols_ <- new_cols[grep("lm_cf", new_cols)]
+      cols_ = new_cols[grep("lm_cf", new_cols)]
       ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
+      if (!is.null(at_)) {
+        cols_ = unique(c(cols_, new_cols))
+        dt_lm = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, (cols_) := NULL]
+      }
 
       # rolling sharpe ratio
       print("Rolling sharpe")
-      new_cols <- paste0("sharpe_", windows_)
+      new_cols = paste0("sharpe_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
                                                                                  na_method = "ignore"))), by = symbol]
+      if (!is.null(at_)) {
+        dt_sharpe = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
 
       # rolling quantile substraction
       print("Calculate rolling quantile div")
@@ -432,13 +544,21 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv[, (q_cols):=NULL]
         return(ohlcv)
       }
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.01)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.05)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.25)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.5)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.75)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.95)
-      ohlcv <- generate_quantile_divergence(ohlcv, p = 0.99)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.01)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.05)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.25)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.5)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.75)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.95)
+      ohlcv = generate_quantile_divergence(ohlcv, p = 0.99)
+      if (!is.null(at_)) {
+        dt_quantile_divergence = ohlcv[
+          at_,
+          .SD,
+          .SDcols = data.table::patterns("symbol|date|q.*_close_divergence_", cols = names(ohlcv))]
+        ohlcv[, names(.SD) := NULL,
+              .SDcols = data.table::patterns("q.*_close_divergence_", cols = names(ohlcv))]
+      }
 
       # OPENSOURCE AP --------------------------------------------------------
       print("Open source asset pricing daily variation.")
@@ -446,11 +566,10 @@ OhlcvFeaturesDaily = R6::R6Class(
       # 52 week
       print("52 week")
       w_ = c(22 * 1:12)
-      new_cols <- paste0("ath_", w_)
+      new_cols = paste0("ath_", w_)
       ohlcv[, (new_cols) := lapply(w_,
                                    function(w) close / frollapply(high, w, max, na.rm = TRUE)),
             by = symbol]
-      tail(ohlcv[symbol == "aapl"], 50)
 
       # maximum return
       print("Rolling max returns")
@@ -460,23 +579,75 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("DolVol")
       ohlcv[, dolvolm := close * volume, by = symbol]
       ohlcv[, dolvolm := frollsum(dolvolm, 22, na.rm=TRUE), by = symbol]
+      if (!is.null(at_)) {
+        cols_ = c("max_ret", "dolvolm", new_cols)
+        dt_opensource_1 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, c(cols_) := NULL]
+      }
+
+      # dolvol on windows
       w_ = c(1,22 * 1:3)
-      new_cols <- paste0("dolvol_", w_)
+      new_cols = paste0("dolvol_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
+      if (!is.null(at_)) {
+        dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+
       # mom12m already caluclated in my predictors
 
       # MERGE ALL ---------------------------------------------------------------
       # keep only relevant columns
       if (!is.null(at_)) {
-        keep_dates[, index := TRUE]
-        ohlcv_sample <- merge(ohlcv, keep_dates,
-                              by = c("symbol", "date"), all.x = TRUE, all.y = FALSE)
-        ohlcv_sample <- ohlcv_sample[index == TRUE]
-        ohlcv_sample[, index := NULL]
-        return(ohlcv_sample)
-      } else {
-        return(ohlcv)
+        # merge all tables if at is used
+        ohlcv = Reduce(
+          function(x, y)
+            merge(x, y, all = TRUE),
+          list(
+            dt_returns,
+            dt_ath,
+            dt_minret,
+            dt_volumes,
+            dt_bidask,
+            dt_pretty,
+            dt_volatility,
+            dt_parkinson,
+            dt_rogers,
+            dt_gkyz,
+            dt_yangzhang,
+            dt_skew,
+            dt_kurtosis,
+            dt_atr,
+            dt_bbands,
+            dt_chaikin_clv,
+            dt_cmf,
+            dt_cmo,
+            dt_cmo_volume,
+            dt_dochian,
+            dt_dvi,
+            dt_gmma,
+            dt_keltnerchannels,
+            dt_kst,
+            dt_mfi,
+            dt_rsi,
+            dt_adx,
+            dt_adx_22_3,
+            dt_cci,
+            dt_obv,
+            dt_sar,
+            dt_wpr,
+            dt_aroon,
+            dt_percent_rank,
+            dt_trading_rules,
+            dt_lm,
+            dt_sharpe,
+            dt_quantile_divergence,
+            dt_opensource_1,
+            dt_opensource_2
+          )
+        )
       }
+      return(ohlcv)
     }
   )
 )

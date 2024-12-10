@@ -73,7 +73,7 @@ RollingGeneric = R6::R6Class(
     get_rolling_features = function(Ohlcv, log_prices = FALSE, price_col = NULL) {
 
       # check if necessary packages are installed
-      installed <- all(sapply(self$packages, requireNamespace, quietly = TRUE))
+      installed = all(sapply(self$packages, requireNamespace, quietly = TRUE))
       if (!(installed)) {
         message(paste0("You need to install the packages ",
                        self$packages, " to use this class."))
@@ -84,17 +84,31 @@ RollingGeneric = R6::R6Class(
       assert_subset(price_col, colnames(Ohlcv$X))
 
       # get data
-      data = copy(Ohlcv$X)
+      # library(finfeatures)
+      # data(spy_hour)
+      # setDT(spy_hour)
+      # setnames(spy_hour, "datetime", "date")
+      # ohlcv = Ohlcv$new(spy_hour)
+      # class(ohlcv)
+      if (test_class(Ohlcv, "Ohlcv")) {
+        data = copy(Ohlcv$X)
+      } else if (test_class(Ohlcv, "data.table")) {
+        data = copy(Ohlcv)
+      } else {
+        stop("Ohlcv object should be either Ohlcv or data.table class.")
+      }
 
       # log
       if (log_prices) {
-        cols <- c("open", "high", "low", "close")
+        cols = c("open", "high", "low", "close")
         data[, (cols) := lapply(.SD, log), .SDcols = cols]
       }
 
       # Price col
-      if (is.null(price_col)) {
+      if (is.null(price_col) & test_class(Ohlcv, "Ohlcv")) {
         price_col = Ohlcv$price
+      } else if (is.null(price_col) & test_class(Ohlcv, "data.table")) {
+        price_col = "close"
       }
 
       # start cluster if workers greater than 1
