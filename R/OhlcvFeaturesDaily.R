@@ -79,6 +79,9 @@ OhlcvFeaturesDaily = R6::R6Class(
       # self$at = at
       # self$windows = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
       # self$quantile_divergence_window =  c(50, 100)
+      # ohlcv = ohlcv[1:1000500]
+      # at = sample(1:nrow(ohlcv), 100000)
+      # self$at = at
 
       # 3) intraday
       # data(spy_hour)
@@ -99,8 +102,11 @@ OhlcvFeaturesDaily = R6::R6Class(
       # at_ <- NULL
       ###### DEBUG ######
 
+
+      # PREPARE -----------------------------------------------------------------
       # checks
       assert_class(ohlcv, "data.table")
+      assert_true(ohlcv[, .N, by = symbol][, all(N > max(self$windows))])
 
       # prepare data
       setkey(ohlcv, "symbol")
@@ -560,6 +566,35 @@ OhlcvFeaturesDaily = R6::R6Class(
               .SDcols = data.table::patterns("q.*_close_divergence_", cols = names(ohlcv))]
       }
 
+      # Ratio of rolling quantiles
+      new_cols = paste0("q999_q001_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(x) {
+        roll::roll_quantile(returns_1, width = x, p = 0.999) /
+          roll::roll_quantile(returns_1, width = x, p = 0.001)
+      }), by = symbol]
+      if (!is.null(at_)) {
+        dt_qratio_999001 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = paste0("q99_q01_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(x) {
+        roll::roll_quantile(returns_1, width = x, p = 0.99) /
+          roll::roll_quantile(returns_1, width = x, p = 0.01)
+      }), by = symbol]
+      if (!is.null(at_)) {
+        dt_qratio_9901 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+      new_cols = paste0("q95_q05_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(x) {
+        roll::roll_quantile(returns_1, width = x, p = 0.95) /
+          roll::roll_quantile(returns_1, width = x, p = 0.05)
+      }), by = symbol]
+      if (!is.null(at_)) {
+        dt_qratio_9505 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+
       # OPENSOURCE AP --------------------------------------------------------
       print("Open source asset pricing daily variation.")
 
@@ -590,9 +625,9 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste0("dolvol_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
       if (!is.null(at_)) {
-        cols_ = c("max_ret", "dolvolm", new_cols)
-        dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
-        ohlcv[, (new_cols) := NULL]
+        cols_ = c("dolvolm", new_cols)
+        dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, (cols_) := NULL]
       }
 
       # mom12m already caluclated in my predictors
@@ -601,9 +636,21 @@ OhlcvFeaturesDaily = R6::R6Class(
       # keep only relevant columns
       if (!is.null(at_)) {
         # merge all tables if at is used
+        Reduce(
+          function(x, y)
+            merge(x, y, by = c("symbol", "date"), all.x = TRUE),
+          list(
+            dt_returns,
+            dt_ath
+            # dt_minret
+            # dt_volumes
+          )
+        )
+        dt_returns[is.na(symbol)]
+
         ohlcv = Reduce(
           function(x, y)
-            merge(x, y, all = TRUE),
+            merge(x, y, by = c("symbol", "date"), all = TRUE),
           list(
             dt_returns,
             dt_ath,
@@ -643,6 +690,9 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_lm,
             dt_sharpe,
             dt_quantile_divergence,
+            dt_qratio_9901,
+            dt_qratio_9505,
+            dt_qratio_999001,
             dt_opensource_1,
             dt_opensource_2
           )
