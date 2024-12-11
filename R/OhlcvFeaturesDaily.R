@@ -574,22 +574,23 @@ OhlcvFeaturesDaily = R6::R6Class(
       # maximum return
       print("Rolling max returns")
       ohlcv[, max_ret := frollapply(returns_1, 22, max, na.rm = TRUE), by = symbol]
+      if (!is.null(at_)) {
+        cols_ = c("max_ret", new_cols)
+        dt_opensource_1 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, c(cols_) := NULL]
+      }
 
       # dolvol
       print("DolVol")
       ohlcv[, dolvolm := close * volume, by = symbol]
       ohlcv[, dolvolm := frollsum(dolvolm, 22, na.rm=TRUE), by = symbol]
-      if (!is.null(at_)) {
-        cols_ = c("max_ret", "dolvolm", new_cols)
-        dt_opensource_1 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
-        ohlcv[, c(cols_) := NULL]
-      }
 
       # dolvol on windows
       w_ = c(1,22 * 1:3)
       new_cols = paste0("dolvol_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
       if (!is.null(at_)) {
+        cols_ = c("max_ret", "dolvolm", new_cols)
         dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
