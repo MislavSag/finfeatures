@@ -26,7 +26,8 @@ Imports:
     yaml,
     cpm,
     bidask,
-    RollingWindow
+    RollingWindow,
+    Rcpp
 Remotes:
     MislavSag/RollingWindowms,
     bitbucket::quanttools/quanttools
@@ -58,3 +59,5 @@ RoxygenNote: 7.3.2
 VignetteBuilder: knitr
 Roxygen: list(r6 = FALSE)
 Config/testthat/edition: 3
+LinkingTo: 
+    Rcpp

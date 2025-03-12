@@ -57,6 +57,8 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(PerformanceAnalytics)
       # library(TTR)
       # library(RollingWindow)
+      # library(roll)
+      # Rcpp::sourceCpp("src/rcpp_functions.cpp")
       # # import daily data
       # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
       # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col)
@@ -139,6 +141,51 @@ OhlcvFeaturesDaily = R6::R6Class(
         dt_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
       }
 
+      # log returns
+      print("Calculate log returns")
+      w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      w_ = sort(unique(c(windows_, w_)))
+      new_cols = paste0("log_returns_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(w) log(close / shift(close, n = w))), by = symbol]
+      if (!is.null(at_)) {
+        dt_log_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+      }
+
+      # TWAP
+      ohlcv[, OC_dist := abs(close - open)]
+      ohlcv[, OH_dist := high - open]
+      ohlcv[, OL_dist := open - low]
+      ohlcv[, HL_dist := high - low]
+      ohlcv[, LC_dist := close - low]
+      ohlcv[, HC_dist := high - close]
+      ohlcv[, OHLC_dist := OH_dist + HL_dist + LC_dist]
+      ohlcv[, OLHC_dist := OL_dist + HL_dist + HC_dist]
+      ohlcv[, OH_mean := (open + high) * 0.5]
+      ohlcv[, OL_mean := (open + low) * 0.5]
+      ohlcv[, HL_mean := (high + low) * 0.5]
+      ohlcv[, LC_mean := (low + close) * 0.5]
+      ohlcv[, HC_mean := (high + close) * 0.5]
+      ohlcv[, OHLC_twap := ((OH_dist / OHLC_dist) * OH_mean +
+                              (HL_dist / OHLC_dist) * HL_mean +
+                              (LC_dist / OHLC_dist) * LC_mean), by = symbol]
+      ohlcv[, OLHC_twap := (((OL_dist / OLHC_dist) * OL_mean) +
+                              ((HL_dist / OLHC_dist) * HL_mean) +
+                              ((HC_dist / OLHC_dist) * HC_mean)), by = symbol]
+      ohlcv[, twap := (OHLC_twap + OLHC_twap) * 0.5, by = symbol]
+      if (!is.null(at_)) {
+        dt_twap = ohlcv[at_, .SD, .SDcols = c(ids, "twap")]
+        cols_ = c("OC_dist", "OH_dist", "OL_dist", "HL_dist", "LC_dist",
+                  "HC_dist", "OHLC_dist", "OLHC_dist", "OH_mean", "OL_mean",
+                  "HL_mean", "LC_mean", "HC_mean", "OHLC_twap", "OLHC_twap",
+                  "twap")
+        oglcv[, cols_ := NULL]
+      } else {
+        cols_ = c("OC_dist", "OH_dist", "OL_dist", "HL_dist", "LC_dist",
+                  "HC_dist", "OHLC_dist", "OLHC_dist", "OH_mean", "OL_mean",
+                  "HL_mean", "LC_mean", "HC_mean", "OHLC_twap", "OLHC_twap")
+        ohlcv[, cols_ := NULL]
+      }
+
       # close ATH
       print("Close ATH")
       ohlcv[, close_ath := close / cummax(fifelse(is.na(high), -Inf, high)), by = symbol]
@@ -146,6 +193,25 @@ OhlcvFeaturesDaily = R6::R6Class(
         dt_ath = ohlcv[at_, .SD, .SDcols = c(ids, "close_ath")]
         ohlcv[, close_ath := NULL]
       }
+
+      # Days since n-day high and low on the 'close' column
+      ohlcv[, days_since_high_250 := frollapply(close, 250, FUN = function(x) length(x) - which.max(x)), by = symbol]
+      ohlcv[, days_since_low_250  := frollapply(close, 250, FUN = function(x) length(x) - which.min(x)), by = symbol]
+      ohlcv[, days_since_high_22 := frollapply(close, 22, FUN = function(x) length(x) - which.max(x)), by = symbol]
+      ohlcv[, days_since_low_22  := frollapply(close, 22, FUN = function(x) length(x) - which.min(x)), by = symbol]
+      ohlcv[, days_since_high_125 := frollapply(close, 125, FUN = function(x) length(x) - which.max(x)), by = symbol]
+      ohlcv[, days_since_low_125  := frollapply(close, 125, FUN = function(x) length(x) - which.min(x)), by = symbol]
+      ohlcv[, days_since_high_66 := frollapply(close, 66, FUN = function(x) length(x) - which.max(x)), by = symbol]
+      ohlcv[, days_since_low_66  := frollapply(close, 66, FUN = function(x) length(x) - which.min(x)), by = symbol]
+      if (!is.null(at_)) {
+        cols_ = c("days_since_high_250", "days_since_low_250",
+                  "days_since_high_22", "days_since_low_22",
+                  "days_since_high_125", "days_since_low_125",
+                  "days_since_high_66", "days_since_low_66")
+        dt_days_since = ohlcv[at_, .SD, .SDcols = cols_]
+        ohlcv[, cols_ := NULL]
+      }
+
 
       # minimum return
       print("Rolling min returns")
@@ -169,6 +235,25 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv[, (new_cols) := NULL]
       }
 
+      # Volume acceleration
+      ohlcv[, previous_5_volume := frollsum(volume, n = 5, align = "right", na.rm = TRUE, fill = NA),
+            by = symbol]
+      ohlcv[, previous_2_volume := frollsum(volume, n = 2, align = "right", na.rm = TRUE, fill = NA),
+            by = symbol]
+      ohlcv[, volume_accel_2_5 := previous_2_volume / previous_5_volume]
+      ohlcv[, previous_22_volume := frollsum(volume, n = 22, align = "right", na.rm = TRUE, fill = NA),
+            by = symbol]
+      ohlcv[, previous_10_volume := frollsum(volume, n = 10, align = "right", na.rm = TRUE, fill = NA),
+            by = symbol]
+      ohlcv[, volume_accel_10_22 := previous_10_volume / previous_22_volume]
+      if (!is.null(at_)) {
+        dt_volume_accel = ohlcv[at_, .SD, .SDcols = c(ids, "volume_accel_2_5", "volume_accel_10_22")]
+        ohlcv[, c("previous_5_volume", "previous_2_volume", "previous_22_volume", "previous_10_volume",
+                  "volume_accel_2_5", "volume_accel_10_22") := NULL]
+      } else {
+        ohlcv[, c("previous_5_volume", "previous_2_volume", "previous_22_volume", "previous_10_volume") := NULL]
+      }
+
       # bid ask spread
       methods_ = c("EDGE", "OHL", "OHLC", "AR", "AR2", "CS", "CS2", "ROLL")
       ohlcv = ohlcv[, as.data.table(spread(
@@ -185,6 +270,32 @@ OhlcvFeaturesDaily = R6::R6Class(
         dt_bidask = ohlcv[at_, .SD, .SDcols = c(ids, paste0("bidask_", tolower(methods_)))]
         ohlcv[, paste0("bidask_", tolower(methods_)) := NULL]
       }
+
+      # Prance range
+      print("Price range factor.")
+      ohlcv[, rolling_high := roll_max(x = high, width = 500), by = symbol]
+      ohlcv[, rolling_low := roll_min(x = high, width = 500), by = symbol]
+      ohlcv[, price_range_factor_500 := (close - rolling_low) / (rolling_high - rolling_low)]
+      ohlcv[, rolling_high := roll_max(x = high, width = 252), by = symbol]
+      ohlcv[, rolling_low := roll_min(x = high, width = 252), by = symbol]
+      ohlcv[, price_range_factor_252 := (close - rolling_low) / (rolling_high - rolling_low)]
+      ohlcv[, rolling_high := roll_max(x = high, width = 125), by = symbol]
+      ohlcv[, rolling_low := roll_min(x = high, width = 125), by = symbol]
+      ohlcv[, price_range_factor_125 := (close - rolling_low) / (rolling_high - rolling_low)]
+      ohlcv[, rolling_high := roll_max(x = high, width = 66), by = symbol]
+      ohlcv[, rolling_low := roll_min(x = high, width = 66), by = symbol]
+      ohlcv[, price_range_factor_66 := (close - rolling_low) / (rolling_high - rolling_low)]
+      ohlcv[, rolling_high := roll_max(x = high, width = 22), by = symbol]
+      ohlcv[, rolling_low := roll_min(x = high, width = 22), by = symbol]
+      ohlcv[, price_range_factor_22 := (close - rolling_low) / (rolling_high - rolling_low)]
+      if (!is.null(at_)) {
+        dt_prange = ohlcv[at_, .SD, .SDcols = c(ids, paste0("price_range_factor_", c(500, 252, 125, 66, 22)))]
+        ohlcv[, paste0("price_range_factor_", c(500, 252, 125, 66, 22)) := NULL]
+        ohlcv[, c("rolling_high", "rolling_low") := NULL]
+      } else {
+        ohlcv[, c("rolling_high", "rolling_low") := NULL]
+      }
+
 
       # Whole number discrepancy
       print("Calculate whole number discrepancy.")
@@ -530,6 +641,16 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv[, (cols_) := NULL]
       }
 
+      # R squared
+      # Rcpp::sourceCpp("src/rcpp_functions.cpp")
+      print("R squared")
+      new_cols = paste0("rsquared_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(w) frollapply(close, w, FUN = sum_of_resids_cpp)), by = symbol]
+      if (!is.null(at_)) {
+        dt_rsquared = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+
       # rolling sharpe ratio
       print("Rolling sharpe")
       new_cols = paste0("sharpe_", windows_)
@@ -595,6 +716,43 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv[, (new_cols) := NULL]
       }
 
+
+      # STREAKS -----------------------------------------------------------------
+      print("Streaks")
+      w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
+      w_ = sort(unique(c(windows_, w_)))
+      new_cols = paste0("returns_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
+      if (!is.null(at_)) {
+        dt_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+      }
+
+      # Calculate down and up move
+      ohlcv[, let(
+        down_move = fifelse(returns < 0, -1, 0),
+        up_move = fifelse(returns > 0, 1, 0)
+      ), by = symbol]
+
+      # Count strikes. If change sign, reset to 0
+      ohlcv[, let(
+        down_streaks = rleid(down_move),
+        up_streaks   = rleid(up_move)),
+        by = symbol
+      ]
+      ohlcv[, let(
+        down_streaks = seq_along(down_move) ,
+        up_streaks = seq_along(up_move)),
+        by = .(symbol, down_streaks)]
+      ohlcv[down_move == 0, down_streaks := 0]
+      ohlcv[up_move == 0, up_streaks := 0]
+
+      # Sample
+      if (!is.null(at_)) {
+        dt_streaks = ohlcv[at_, .SD, .SDcols = c("down_streaks", "up_streaks")]
+        ohlcv[, c("down_move", "up_move", "down_streaks ", "down_streaks ") := NULL]
+      }
+
+
       # OPENSOURCE AP --------------------------------------------------------
       print("Open source asset pricing daily variation.")
 
@@ -652,11 +810,16 @@ OhlcvFeaturesDaily = R6::R6Class(
           function(x, y)
             merge(x, y, by = c("symbol", "date"), all = TRUE),
           list(
+            dt_twap,
             dt_returns,
+            dt_log_returns,
             dt_ath,
+            dt_days_since,
             dt_minret,
             dt_volumes,
+            dt_volume_accel,
             dt_bidask,
+            dt_prange,
             dt_pretty,
             dt_volatility,
             dt_parkinson,
@@ -688,6 +851,7 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_percent_rank,
             dt_trading_rules,
             dt_lm,
+            dt_rsquared,
             dt_sharpe,
             dt_quantile_divergence,
             dt_qratio_9901,
