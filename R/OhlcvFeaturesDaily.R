@@ -770,15 +770,17 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, dolvolm := close * volume, by = symbol]
       ohlcv[, dolvolm := frollsum(dolvolm, 22, na.rm=TRUE), by = symbol]
 
-      # dolvol on windows
-      w_ = c(1,22 * 1:3)
-      new_cols = paste0("dolvol_", w_)
-      ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
-      if (!is.null(at_)) {
-        cols_ = c("dolvolm", new_cols)
-        dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
-        ohlcv[, (cols_) := NULL]
-      }
+      # # dolvol on windows
+      # Error in vecseq(f__, len__, if (allow.cartesian || notjoin || !anyDuplicated(f__,  :
+      # Join results in more than 2^31 rows (internal vecseq reached physical limit). Very likely misspecified join. Check for duplicate key values in i each of which join to the same group in x over and over again. If that's ok, try by=.EACHI to run j for each group to avoid the large allocation. Otherwise, please search for this error message in the FAQ, Wiki, Stack Overflow and data.table issue tracker for advice.
+      # w_ = c(1,22 * 1:3)
+      # new_cols = paste0("dolvol_", w_)
+      # ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
+      # if (!is.null(at_)) {
+      #   cols_ = c("dolvolm", new_cols)
+      #   dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+      #   ohlcv[, (cols_) := NULL]
+      # }
 
       # mom12m already caluclated in my predictors
 
