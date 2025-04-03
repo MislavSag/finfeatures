@@ -88,11 +88,11 @@ RollingForecats = R6::R6Class(
 
       # calculate arima forecasts
       if (params$forecast_type == "autoarima") {
-        y <- forecast::auto.arima(x$returns)
+        y <- forecast::auto.arima(na.omit(x[, get(price_col)]))
         y <- as.data.table(forecast::forecast(y, params$h))
         cols_prefix <- "autoarima_"
       } else if (params$forecast_type == "nnetar") {
-        y <- forecast::nnetar(na.omit(x$returns))
+        y <- forecast::auto.arima(na.omit(x[, get(price_col)]))
         y <- as.data.table(forecast::forecast(y, PI = TRUE, h=params$h, npaths = 120))
         cols_prefix <- "nnetar_"
       } else if (params$forecast_type == "ets") {

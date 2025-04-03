@@ -58,10 +58,11 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(TTR)
       # library(RollingWindow)
       # library(roll)
+      # library(bidask)
       # Rcpp::sourceCpp("src/rcpp_functions.cpp")
-      # # import daily data
+      # import daily data
       # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
-      # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col)
+      # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col, nrows = 1000000)
       # ohlcv = unique(ohlcv, by = c("symbol", "date"))
       # unadjustd_cols = c("open", "high", "low")
       # ohlcv[, (unadjustd_cols) := lapply(.SD, function(x) (close_adj / close) * x), .SDcols = unadjustd_cols]
@@ -81,9 +82,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       # self$at = at
       # self$windows = c(5, 10, 22, 22 * 3, 22 * 6, 22 * 12, 22 * 12 * 2)
       # self$quantile_divergence_window =  c(50, 100)
-      # ohlcv = ohlcv[1:1000500]
-      # at = sample(1:nrow(ohlcv), 100000)
-      # self$at = at
 
       # 3) intraday
       # data(spy_hour)
@@ -152,6 +150,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       }
 
       # TWAP
+      print("Calculate TWAP")
       ohlcv[, OC_dist := abs(close - open)]
       ohlcv[, OH_dist := high - open]
       ohlcv[, OL_dist := open - low]
@@ -178,12 +177,12 @@ OhlcvFeaturesDaily = R6::R6Class(
                   "HC_dist", "OHLC_dist", "OLHC_dist", "OH_mean", "OL_mean",
                   "HL_mean", "LC_mean", "HC_mean", "OHLC_twap", "OLHC_twap",
                   "twap")
-        oglcv[, cols_ := NULL]
+        ohlcv[, (cols_) := NULL]
       } else {
         cols_ = c("OC_dist", "OH_dist", "OL_dist", "HL_dist", "LC_dist",
                   "HC_dist", "OHLC_dist", "OLHC_dist", "OH_mean", "OL_mean",
                   "HL_mean", "LC_mean", "HC_mean", "OHLC_twap", "OLHC_twap")
-        ohlcv[, cols_ := NULL]
+        ohlcv[, (cols_) := NULL]
       }
 
       # close ATH
@@ -209,9 +208,8 @@ OhlcvFeaturesDaily = R6::R6Class(
                   "days_since_high_125", "days_since_low_125",
                   "days_since_high_66", "days_since_low_66")
         dt_days_since = ohlcv[at_, .SD, .SDcols = cols_]
-        ohlcv[, cols_ := NULL]
+        ohlcv[, (cols_) := NULL]
       }
-
 
       # minimum return
       print("Rolling min returns")
@@ -271,7 +269,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv[, paste0("bidask_", tolower(methods_)) := NULL]
       }
 
-      # Prance range
+      # Price range
       print("Price range factor.")
       ohlcv[, rolling_high := roll_max(x = high, width = 500), by = symbol]
       ohlcv[, rolling_low := roll_min(x = high, width = 500), by = symbol]
@@ -295,7 +293,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       } else {
         ohlcv[, c("rolling_high", "rolling_low") := NULL]
       }
-
 
       # Whole number discrepancy
       print("Calculate whole number discrepancy.")
@@ -328,9 +325,9 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, pretty_1 := (close - pretty_1) / pretty_1]
       ohlcv[, pretty_2 := (close - pretty_2) / pretty_2]
       if (!is.null(at_)) {
-        cols = colnames(ohlcv)[data.table::patterns("symbol|date|^pretty", cols = names(ohlcv))]
+        cols = data.table::patterns("symbol|date|^pretty", cols = names(ohlcv))
         dt_pretty = ohlcv[at_, ..cols]
-        cols = colnames(ohlcv)[data.table::patterns("^pretty", cols = names(ohlcv))]
+        cols = data.table::patterns("^pretty", cols = names(ohlcv))
         ohlcv[, (cols) := NULL]
       }
 
@@ -719,18 +716,11 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # STREAKS -----------------------------------------------------------------
       print("Streaks")
-      w_ = c(1:5, 5*2, 22*(1:12), 252 * 2, 252 * 4)
-      w_ = sort(unique(c(windows_, w_)))
-      new_cols = paste0("returns_", w_)
-      ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
-      if (!is.null(at_)) {
-        dt_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
-      }
 
-      # Calculate down and up move
+            # Calculate down and up move
       ohlcv[, let(
-        down_move = fifelse(returns < 0, -1, 0),
-        up_move = fifelse(returns > 0, 1, 0)
+        down_move = fifelse(returns_1 < 0, -1, 0),
+        up_move = fifelse(returns_1 > 0, 1, 0)
       ), by = symbol]
 
       # Count strikes. If change sign, reset to 0
@@ -740,16 +730,18 @@ OhlcvFeaturesDaily = R6::R6Class(
         by = symbol
       ]
       ohlcv[, let(
-        down_streaks = seq_along(down_move) ,
-        up_streaks = seq_along(up_move)),
-        by = .(symbol, down_streaks)]
+        down_streaks = seq_along(down_move)
+      ), by = .(symbol, down_streaks)]
+      ohlcv[, let(
+        up_streaks = seq_along(up_move)
+      ), by = .(symbol, up_streaks)]
       ohlcv[down_move == 0, down_streaks := 0]
       ohlcv[up_move == 0, up_streaks := 0]
 
       # Sample
       if (!is.null(at_)) {
-        dt_streaks = ohlcv[at_, .SD, .SDcols = c("down_streaks", "up_streaks")]
-        ohlcv[, c("down_move", "up_move", "down_streaks ", "down_streaks ") := NULL]
+        dt_streaks = ohlcv[at_, .SD, .SDcols = c(ids, "down_streaks", "up_streaks")]
+        ohlcv[, c("down_move", "up_move", "down_streaks", "up_streaks") := NULL]
       }
 
 
@@ -857,6 +849,9 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_qratio_9901,
             dt_qratio_9505,
             dt_qratio_999001,
+
+            down_streaks,
+
             dt_opensource_1,
             dt_opensource_2
           )
