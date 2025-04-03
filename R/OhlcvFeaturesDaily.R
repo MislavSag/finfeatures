@@ -640,13 +640,13 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # R squared
       # Rcpp::sourceCpp("src/rcpp_functions.cpp")
-      print("R squared")
-      new_cols = paste0("rsquared_", windows_)
-      ohlcv[, (new_cols) := lapply(windows_, function(w) frollapply(close, w, FUN = sum_of_resids_cpp)), by = symbol]
-      if (!is.null(at_)) {
-        dt_rsquared = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
-        ohlcv[, (new_cols) := NULL]
-      }
+      # print("R squared")
+      # new_cols = paste0("rsquared_", windows_)
+      # ohlcv[, (new_cols) := lapply(windows_, function(w) frollapply(close, w, FUN = sum_of_resids_cpp)), by = symbol]
+      # if (!is.null(at_)) {
+      #   dt_rsquared = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+      #   ohlcv[, (new_cols) := NULL]
+      # }
 
       # rolling sharpe ratio
       print("Rolling sharpe")
@@ -843,7 +843,7 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_percent_rank,
             dt_trading_rules,
             dt_lm,
-            dt_rsquared,
+            # dt_rsquared,
             dt_sharpe,
             dt_quantile_divergence,
             dt_qratio_9901,
