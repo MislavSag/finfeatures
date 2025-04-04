@@ -126,7 +126,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       assert_double(ohlcv$close, lower = 1e-008)
 
       # Get start columns
-      start_cols = colnames(ohlcv)
+      start_cols = ohlcv[, colnames(.SD)]
 
       # MY PREDICTORS -----------------------------------------------------------
       print("My predictors.")
@@ -791,19 +791,6 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # keep only relevant columns
       if (!is.null(at_)) {
-        # merge all tables if at is used
-        # Reduce(
-        #   function(x, y)
-        #     merge(x, y, by = c("symbol", "date"), all.x = TRUE),
-        #   list(
-        #     dt_returns,
-        #     dt_ath
-        #     # dt_minret
-        #     # dt_volumes
-        #   )
-        # )
-        # dt_returns[is.na(symbol)]
-
         ohlcv = Reduce(
           function(x, y)
             merge(x, y, by = c("symbol", "date"), all = TRUE),
