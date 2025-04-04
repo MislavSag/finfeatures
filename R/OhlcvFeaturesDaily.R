@@ -795,7 +795,7 @@ OhlcvFeaturesDaily = R6::R6Class(
           function(x, y)
             merge(x, y, by = c("symbol", "date"), all = TRUE),
           list(
-            ohlcv[, .SD, .SDcols = start_cols],
+            ohlcv[at_, .SD, .SDcols = start_cols],
             dt_twap,
             dt_returns,
             dt_log_returns,
