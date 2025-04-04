@@ -60,7 +60,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(roll)
       # library(bidask)
       # Rcpp::sourceCpp("src/rcpp_functions.cpp")
-      # import daily data
       # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
       # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col, nrows = 1000000)
       # ohlcv = unique(ohlcv, by = c("symbol", "date"))
@@ -207,7 +206,7 @@ OhlcvFeaturesDaily = R6::R6Class(
                   "days_since_high_22", "days_since_low_22",
                   "days_since_high_125", "days_since_low_125",
                   "days_since_high_66", "days_since_low_66")
-        dt_days_since = ohlcv[at_, .SD, .SDcols = cols_]
+        dt_days_since = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
         ohlcv[, (cols_) := NULL]
       }
 
@@ -773,32 +772,34 @@ OhlcvFeaturesDaily = R6::R6Class(
       # # dolvol on windows
       # Error in vecseq(f__, len__, if (allow.cartesian || notjoin || !anyDuplicated(f__,  :
       # Join results in more than 2^31 rows (internal vecseq reached physical limit). Very likely misspecified join. Check for duplicate key values in i each of which join to the same group in x over and over again. If that's ok, try by=.EACHI to run j for each group to avoid the large allocation. Otherwise, please search for this error message in the FAQ, Wiki, Stack Overflow and data.table issue tracker for advice.
-      # w_ = c(1,22 * 1:3)
-      # new_cols = paste0("dolvol_", w_)
-      # ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
-      # if (!is.null(at_)) {
-      #   cols_ = c("dolvolm", new_cols)
-      #   dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
-      #   ohlcv[, (cols_) := NULL]
-      # }
+      w_ = c(1,22 * 1:3)
+      new_cols = paste0("dolvol_", w_)
+      ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
+      if (!is.null(at_)) {
+        cols_ = c("dolvolm", new_cols)
+        dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
+        ohlcv[, (cols_) := NULL]
+      }
 
       # mom12m already caluclated in my predictors
 
       # MERGE ALL ---------------------------------------------------------------
+      print("Merge all tables.")
+
       # keep only relevant columns
       if (!is.null(at_)) {
         # merge all tables if at is used
-        Reduce(
-          function(x, y)
-            merge(x, y, by = c("symbol", "date"), all.x = TRUE),
-          list(
-            dt_returns,
-            dt_ath
-            # dt_minret
-            # dt_volumes
-          )
-        )
-        dt_returns[is.na(symbol)]
+        # Reduce(
+        #   function(x, y)
+        #     merge(x, y, by = c("symbol", "date"), all.x = TRUE),
+        #   list(
+        #     dt_returns,
+        #     dt_ath
+        #     # dt_minret
+        #     # dt_volumes
+        #   )
+        # )
+        # dt_returns[is.na(symbol)]
 
         ohlcv = Reduce(
           function(x, y)
@@ -851,9 +852,7 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_qratio_9901,
             dt_qratio_9505,
             dt_qratio_999001,
-
-            down_streaks,
-
+            dt_streaks,
             dt_opensource_1,
             dt_opensource_2
           )
