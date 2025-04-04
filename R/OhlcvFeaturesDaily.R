@@ -125,6 +125,9 @@ OhlcvFeaturesDaily = R6::R6Class(
       assert_double(ohlcv$low, lower = 1e-008)
       assert_double(ohlcv$close, lower = 1e-008)
 
+      # Get start columns
+      start_cols = colnames(ohlcv)
+
       # MY PREDICTORS -----------------------------------------------------------
       print("My predictors.")
 
@@ -805,6 +808,7 @@ OhlcvFeaturesDaily = R6::R6Class(
           function(x, y)
             merge(x, y, by = c("symbol", "date"), all = TRUE),
           list(
+            ohlcv[, .SD, .SDcols = start_cols],
             dt_twap,
             dt_returns,
             dt_log_returns,
