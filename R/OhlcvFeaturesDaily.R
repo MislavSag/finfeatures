@@ -56,7 +56,6 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(QuantTools)
       # library(PerformanceAnalytics)
       # library(TTR)
-      # library(RollingWindow)
       # library(roll)
       # library(bidask)
       # Rcpp::sourceCpp("src/rcpp_functions.cpp")
@@ -633,7 +632,9 @@ OhlcvFeaturesDaily = R6::R6Class(
                                            function(w) as.data.frame(as.data.table(roll::roll_lm(1:length(close), log(close), width = w))))),
             by = symbol]
       cols_ = new_cols[grep("lm_cf", new_cols)]
-      ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
+      # If a regression coefficient (whether the slope or the intercept) is large—say, larger than roughly 2.8 (because 2.8×252 exceeds the limits of what exp can handle)—the exponential function will overflow and produce Inf. This can happen if the window size is small or if the underlying data produces unstable regression estimates.
+      # The annualization formula (using exponentiation) is typically only meant for the slope coefficient (daily log-return). Applying it to the intercept can result in nonsensical, extremely large (or infinite) values.
+      # ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
       if (!is.null(at_)) {
         cols_ = unique(c(cols_, new_cols))
         dt_lm = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
@@ -689,8 +690,8 @@ OhlcvFeaturesDaily = R6::R6Class(
       # Ratio of rolling quantiles
       new_cols = paste0("q999_q001_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(x) {
-        roll::roll_quantile(returns_1, width = x, p = 0.999) /
-          roll::roll_quantile(returns_1, width = x, p = 0.001)
+        (roll::roll_quantile(returns_1, width = x, p = 0.999) + 0.0001) /
+          (roll::roll_quantile(returns_1, width = x, p = 0.001) + 0.0001)
       }), by = symbol]
       if (!is.null(at_)) {
         dt_qratio_999001 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]

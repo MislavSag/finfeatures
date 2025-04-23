@@ -94,7 +94,7 @@ RollingTheft = R6::R6Class(
 
       # calculate features
       y = data.table::as.data.table(
-        theftms::calculate_features(
+        theft::calculate_features(
           x,
           "symbol",
           "date",
@@ -113,7 +113,7 @@ RollingTheft = R6::R6Class(
     }
   ),
   private = list(
-    packages = "theftms",
+    packages = "theft",
     params = NULL
   )
 )

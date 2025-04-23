@@ -42,7 +42,6 @@ Suggests:
     tsfeatures,
     backCUSUM,
     theft,
-    theftms,
     WaveletArima,
     fracdiff,
     binomialtrend,
