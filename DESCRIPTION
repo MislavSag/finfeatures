@@ -29,6 +29,7 @@ Imports:
     RollingWindow,
     Rcpp
 Remotes:
+    MislavSag/theft,
     MislavSag/RollingWindowms,
     bitbucket::quanttools/quanttools
 Suggests:
