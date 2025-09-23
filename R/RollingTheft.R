@@ -63,9 +63,10 @@ RollingTheft = R6::R6Class(
       )
 
       # DEBUGE - set python path
-      # use_virtualenv("C:/Users/Mislav/projects_py/pyquant")
-      # builtins = import_builtins(convert = FALSE)
-      # main = import_main(convert = FALSE)
+      # library(reticulate)
+      # library(finfeatures)
+      # library(data.table)
+      # use_virtualenv("C:/Users/Mislav/projects_py/quant")
       # tsfel = reticulate::import("tsfel", convert = FALSE)
       # tsfresh = reticulate::import("tsfresh", convert = FALSE)
     },
@@ -90,7 +91,9 @@ RollingTheft = R6::R6Class(
       # x = as.data.table(spy_hour)
       # x = x[, .(symbol, datetime, close)]
       # setnames(x, "datetime", "date")
-      # params = c("catch22", "feasts")
+      # params = c("tsfel")
+      # price_col = "close"
+      # window = 100
 
       # calculate features
       y = data.table::as.data.table(
