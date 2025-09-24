@@ -487,7 +487,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # EMV - produces mostly Inf and Nan
       # GMMA
       print("GMMA")
-      new_cols = gsub(" ", "_", colnames(GMMA(ohlcv[1:500, close])))
+      new_cols = gsub(" ", "_", colnames(GMMA(ohlcv[1:max(nrow(ohlcv), 500), close])))
       new_cols = expand.grid("GMMA", new_cols)
       new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := as.data.frame(GMMA(close)), by = symbol]
