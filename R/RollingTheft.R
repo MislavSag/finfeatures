@@ -66,7 +66,8 @@ RollingTheft = R6::R6Class(
       # library(reticulate)
       # library(finfeatures)
       # library(data.table)
-      # use_virtualenv("C:/Users/Mislav/projects_py/quant")
+      # library(tsibble)
+      # use_virtualenv("C:/Users/Mislav/projects_py/quant/.venv")
       # tsfel = reticulate::import("tsfel", convert = FALSE)
       # tsfresh = reticulate::import("tsfresh", convert = FALSE)
     },
@@ -89,19 +90,18 @@ RollingTheft = R6::R6Class(
 
       # debug
       # x = as.data.table(spy_hour)
-      # x = x[, .(symbol, datetime, close)]
+      # x = x[, .(symbol, date = datetime, close, returns = close / shift(close) - 1)]
       # setnames(x, "datetime", "date")
       # params = c("tsfel")
       # price_col = "close"
       # window = 100
 
       # calculate features
+      x_ = x[, .SD, .SDcols = c("symbol", "date", price_col)] |>
+        na.omit()
       y = data.table::as.data.table(
         theft::calculate_features(
-          x,
-          "symbol",
-          "date",
-          price_col,
+          tsibble::as_tsibble(x_, key = "symbol", index = "date"),
           feature_set = params
         )
       )
@@ -110,13 +110,13 @@ RollingTheft = R6::R6Class(
       results = data.table::as.data.table(y)
 
       # chamnge column names to fit to mlr3
-      colnames(results) <- gsub(" |-", "_", colnames(results))
+      colnames(results) = gsub(" |-|\\.", "_", colnames(results))
 
       return(results)
     }
   ),
   private = list(
-    packages = "theft",
+    packages = c("theft", "tsibble"),
     params = NULL
   )
 )
