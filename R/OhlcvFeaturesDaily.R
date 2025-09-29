@@ -60,7 +60,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # library(bidask)
       # Rcpp::sourceCpp("src/rcpp_functions.cpp")
       # col = c("date", "open", "high", "low", "close", "volume", "close_adj", "symbol")
-      # ohlcv = fread("F:/lean/data/stocks_daily.csv", col.names = col, nrows = 1000000)
+      # ohlcv = fread("/home/marin/Strategies/Lean/sp_500_daily.csv", col.names = col, nrows = 1000000)
       # ohlcv = unique(ohlcv, by = c("symbol", "date"))
       # unadjustd_cols = c("open", "high", "low")
       # ohlcv[, (unadjustd_cols) := lapply(.SD, function(x) (close_adj / close) * x), .SDcols = unadjustd_cols]
@@ -787,6 +787,30 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # mom12m already caluclated in my predictors
 
+      # MARIN ADD ---------------------------------------------------------------
+
+      # price-path convexity function
+      convex <- function(x) {
+        x <- na.omit(as.numeric(x))
+        if (length(x) < 2) return(NA_real_)
+        mid <- (x[1] + x[length(x)])/2
+        avg <- mean(x)
+        if (mid == 0) return(NA_real_)
+        (mid - avg) / mid
+      }
+
+      # convexity
+      print("Convexity")
+      new_cols = paste0("convexity_", windows_)
+      ohlcv[, (new_cols) := lapply(windows_, function(n) {
+        frollapply(close, n, convex)
+      }), by = symbol]
+      if (!is.null(self$at)) {
+        dt_convexity = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
+        ohlcv[, (new_cols) := NULL]
+      }
+
+
       # MERGE ALL ---------------------------------------------------------------
       print("Merge all tables.")
 
@@ -846,7 +870,8 @@ OhlcvFeaturesDaily = R6::R6Class(
             dt_qratio_999001,
             dt_streaks,
             dt_opensource_1,
-            dt_opensource_2
+            dt_opensource_2,
+            dt_convexity
           )
         )
       }
@@ -854,3 +879,5 @@ OhlcvFeaturesDaily = R6::R6Class(
     }
   )
 )
+
+# devtools::document
