@@ -136,7 +136,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       w_ = sort(unique(c(windows_, w_)))
       new_cols = paste0("returns_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) close / shift(close, n = w) - 1), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
       }
 
@@ -146,7 +146,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       w_ = sort(unique(c(windows_, w_)))
       new_cols = paste0("log_returns_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) log(close / shift(close, n = w))), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_log_returns = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
       }
 
@@ -172,7 +172,7 @@ OhlcvFeaturesDaily = R6::R6Class(
                               ((HL_dist / OLHC_dist) * HL_mean) +
                               ((HC_dist / OLHC_dist) * HC_mean)), by = symbol]
       ohlcv[, twap := (OHLC_twap + OLHC_twap) * 0.5, by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_twap = ohlcv[at_, .SD, .SDcols = c(ids, "twap")]
         cols_ = c("OC_dist", "OH_dist", "OL_dist", "HL_dist", "LC_dist",
                   "HC_dist", "OHLC_dist", "OLHC_dist", "OH_mean", "OL_mean",
@@ -189,7 +189,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # close ATH
       print("Close ATH")
       ohlcv[, close_ath := close / cummax(fifelse(is.na(high), -Inf, high)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_ath = ohlcv[at_, .SD, .SDcols = c(ids, "close_ath")]
         ohlcv[, close_ath := NULL]
       }
@@ -203,7 +203,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, days_since_low_125  := frollapply(close, 125, FUN = function(x) length(x) - which.min(x)), by = symbol]
       ohlcv[, days_since_high_66 := frollapply(close, 66, FUN = function(x) length(x) - which.max(x)), by = symbol]
       ohlcv[, days_since_low_66  := frollapply(close, 66, FUN = function(x) length(x) - which.min(x)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = c("days_since_high_250", "days_since_low_250",
                   "days_since_high_22", "days_since_low_22",
                   "days_since_high_125", "days_since_low_125",
@@ -218,7 +218,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := lapply(windows_, function(n) {
         frollapply(returns_1, n, min, na.rm = TRUE)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_minret = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -229,7 +229,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       w_ = sort(unique(c(windows_, w_)))
       new_cols = paste0("volume_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(w) volume / shift(volume, n = w) - 1), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_volumes = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -245,7 +245,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, previous_10_volume := frollsum(volume, n = 10, align = "right", na.rm = TRUE, fill = NA),
             by = symbol]
       ohlcv[, volume_accel_10_22 := previous_10_volume / previous_22_volume]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_volume_accel = ohlcv[at_, .SD, .SDcols = c(ids, "volume_accel_2_5", "volume_accel_10_22")]
         ohlcv[, c("previous_5_volume", "previous_2_volume", "previous_22_volume", "previous_10_volume",
                   "volume_accel_2_5", "volume_accel_10_22") := NULL]
@@ -255,7 +255,7 @@ OhlcvFeaturesDaily = R6::R6Class(
 
       # bid ask spread
       methods_ = c("EDGE", "OHL", "OHLC", "AR", "AR2", "CS", "CS2", "ROLL")
-      ohlcv = ohlcv[, as.data.table(spread(
+      ohlcv = ohlcv[, as.data.table(bidask::spread(
         as.xts.data.table(.SD),
         width = 150,
         method = methods_
@@ -265,7 +265,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         ohlcv, on = c("symbol" = "symbol", "index" = "date")]
       setnames(ohlcv, "index", "date")
       setnames(ohlcv, methods_, paste0("bidask_", tolower(methods_)))
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_bidask = ohlcv[at_, .SD, .SDcols = c(ids, paste0("bidask_", tolower(methods_)))]
         ohlcv[, paste0("bidask_", tolower(methods_)) := NULL]
       }
@@ -287,7 +287,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, rolling_high := roll_max(x = high, width = 22), by = symbol]
       ohlcv[, rolling_low := roll_min(x = high, width = 22), by = symbol]
       ohlcv[, price_range_factor_22 := (close - rolling_low) / (rolling_high - rolling_low)]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_prange = ohlcv[at_, .SD, .SDcols = c(ids, paste0("price_range_factor_", c(500, 252, 125, 66, 22)))]
         ohlcv[, paste0("price_range_factor_", c(500, 252, 125, 66, 22)) := NULL]
         ohlcv[, c("rolling_high", "rolling_low") := NULL]
@@ -325,7 +325,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # ohlcv[pretty_1  == pretty_2]
       ohlcv[, pretty_1 := (close - pretty_1) / pretty_1]
       ohlcv[, pretty_2 := (close - pretty_2) / pretty_2]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols = data.table::patterns("symbol|date|^pretty", cols = names(ohlcv))
         dt_pretty = ohlcv[at_, ..cols]
         cols = data.table::patterns("^pretty", cols = names(ohlcv))
@@ -336,7 +336,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("Rolling volatility.")
       new_cols = paste0("sd_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) roll::roll_sd(returns_1, width = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_volatility = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -346,7 +346,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste0("sd_parkinson_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) volatility(cbind(open, high, low, close), n = w, calc = "parkinson")),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_parkinson = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -355,7 +355,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "rogers.satchell")},
                  error = function(e) NA)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_rogers = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -364,7 +364,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "gk.yz")},
                  error = function(e) NA)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_gkyz = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -374,7 +374,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         tryCatch({volatility(cbind(open, high, low, close), n = w, calc = "yang.zhang")},
                  error = function(e) NA)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_yangzhang = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -384,7 +384,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste0("skew_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSkew(returns_1, window = w, na_method = "ignore"))),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_skew = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -392,7 +392,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # rolling kurtosis
       new_cols = paste0("kurtosis_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingKurt(returns_1, window = w, na_method = "ignore"))), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_kurtosis = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -406,7 +406,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(14, function(w) as.data.frame(ATR(cbind(high, low, close), n = w)[, c(1, 2)]))), by = symbol]
       new_new_cols = paste0(new_cols, "_closedv")
       ohlcv[, (new_new_cols) := lapply(.SD, function(x) x / close), .SDcols = new_cols]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_atr = ohlcv[at_, .SD, .SDcols = c(ids, new_cols, new_new_cols)]
         ohlcv[, c(new_cols, new_new_cols) := NULL]
       }
@@ -417,7 +417,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(BBands(close, n = w)))), by = symbol]
       new_cols_change <- new_cols[grep("bbands.*up|bbands.*mavg|bbands.*dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) close / x), .SDcols = new_cols_change]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_bbands = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, c(new_cols) := NULL]
       }
@@ -430,7 +430,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # CLV
       print("CLV")
       ohlcv[, ("clv_one_window") := CLV(cbind(high, low, close)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = c("chaikinad_one_window", "chaikinVol_one_window", "clv_one_window")
         dt_chaikin_clv = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
         ohlcv[, c(cols_) := NULL]
@@ -439,7 +439,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("CMF")
       new_cols = paste0("cmf_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMF(cbind(high, low, close), volume, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_cmf = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -447,13 +447,13 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("CMO")
       new_cols = paste0("cmo_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMO(close, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_cmo = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
       new_cols = paste0("cmo_volume_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CMO(volume, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_cmo_volume = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -468,7 +468,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(DonchianChannel(cbind(high, low), n = w)))),
             by = symbol]
       ohlcv[, (new_cols) := lapply(.SD, function(x) close / x), .SDcols = new_cols]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_dochian = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -480,7 +480,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows__, function(w) as.data.frame(DVI(close, n = w)))),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_dvi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -492,7 +492,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols <- paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := as.data.frame(GMMA(close)), by = symbol]
       ohlcv[, (new_cols) := lapply(.SD, function(x) close / x), .SDcols = new_cols]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_gmma = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -504,7 +504,7 @@ OhlcvFeaturesDaily = R6::R6Class(
             by = symbol]
       new_cols_change <- new_cols[grep("keltnerchannels.*up|keltnerchannels.*mavg|keltnerchannels.*dn", new_cols)]
       ohlcv[, (new_cols_change) := lapply(.SD, function(x) close / x), .SDcols = new_cols_change]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_keltnerchannels = ohlcv[at_, .SD, .SDcols = c(ids, new_cols_change)]
         ohlcv[, c(new_cols_change) := NULL]
       }
@@ -515,7 +515,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows__, function(w) as.data.frame(KST(close, n = ceiling(w / 2), nROC = w)))),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_kst = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -523,7 +523,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("MFI")
       new_cols = paste0("mfi_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) MFI(cbind(high, low, close), volume, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_mfi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -531,7 +531,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("RSI")
       new_cols = paste0("rsi_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) rsi(close, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_rsi = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -541,7 +541,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(14, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_adx = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -549,34 +549,34 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(22 * 3, function(w) as.data.frame(ADX(cbind(high, low, close), n = w)))),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_adx_22_3 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
       # CCI
       new_cols = paste0("cci_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) CCI(cbind(high, low, close), n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_cci = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
       # OBV
       ohlcv[, ("obv") := OBV(close, volume), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_obv = ohlcv[at_, .SD, .SDcols = c(ids, "obv")]
         ohlcv[, ("obv") := NULL]
       }
       # SAR
       ohlcv[, ("sar") := as.vector(SAR(cbind(high, close))), by = symbol]
       ohlcv[, ("sar") := close / sar]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_sar = ohlcv[at_, .SD, .SDcols = c(ids, "sar")]
         ohlcv[, ("sar") := NULL]
       }
       # WPR
       new_cols = paste0("wpr_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) WPR(cbind(high, low, close))), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_wpr = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -584,7 +584,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = expand.grid("aroon", c("aroonUp", "aroonDn", "oscillator"), windows_)
       new_cols = paste(new_cols$Var1, new_cols$Var2, new_cols$Var3, sep = "_")
       ohlcv[, (new_cols) := do.call(cbind, lapply(windows_, function(w) as.data.frame(aroon(cbind(high, low), n = w)))), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_aroon = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -592,7 +592,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # percent rank
       new_cols = paste0("percent_rank_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) QuantTools::roll_percent_rank(close, n = w)), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_percent_rank = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -615,7 +615,7 @@ OhlcvFeaturesDaily = R6::R6Class(
             by = symbol]
       ohlcv[, close_above_vwap_200 := (close - TTR::VWAP(close, volume, n = 200)) / TTR::VWAP(close, volume, n = 200),
             by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = c("close_above_sma200", "close_above_sma100", "close_above_sma50", "close_above_sma22",
                   "ema_above_sma200", "ema_above_sma100", "close_above_vwap_20", "close_above_vwap_50",
                   "close_above_vwap_100", "close_above_vwap_200")
@@ -635,7 +635,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # If a regression coefficient (whether the slope or the intercept) is large—say, larger than roughly 2.8 (because 2.8×252 exceeds the limits of what exp can handle)—the exponential function will overflow and produce Inf. This can happen if the window size is small or if the underlying data produces unstable regression estimates.
       # The annualization formula (using exponentiation) is typically only meant for the slope coefficient (daily log-return). Applying it to the intercept can result in nonsensical, extremely large (or infinite) values.
       # ohlcv[, (cols_) := lapply(.SD, function(x) (exp(x)^252-1) * 100), .SDcols = cols_]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = unique(c(cols_, new_cols))
         dt_lm = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
         ohlcv[, (cols_) := NULL]
@@ -646,7 +646,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # print("R squared")
       # new_cols = paste0("rsquared_", windows_)
       # ohlcv[, (new_cols) := lapply(windows_, function(w) frollapply(close, w, FUN = sum_of_resids_cpp)), by = symbol]
-      # if (!is.null(at_)) {
+      # if (!is.null(self$at)) {
       #   dt_rsquared = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
       #   ohlcv[, (new_cols) := NULL]
       # }
@@ -656,7 +656,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       new_cols = paste0("sharpe_", windows_)
       ohlcv[, (new_cols) := lapply(windows_, function(w) as.vector(RollingSharpe(returns_1, rep(0, length(close)), window = w,
                                                                                  na_method = "ignore"))), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_sharpe = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -678,7 +678,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv = generate_quantile_divergence(ohlcv, p = 0.75)
       ohlcv = generate_quantile_divergence(ohlcv, p = 0.95)
       ohlcv = generate_quantile_divergence(ohlcv, p = 0.99)
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_quantile_divergence = ohlcv[
           at_,
           .SD,
@@ -693,7 +693,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         (roll::roll_quantile(returns_1, width = x, p = 0.999) + 0.0001) /
           (roll::roll_quantile(returns_1, width = x, p = 0.001) + 0.0001)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_qratio_999001 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -702,7 +702,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         roll::roll_quantile(returns_1, width = x, p = 0.99) /
           roll::roll_quantile(returns_1, width = x, p = 0.01)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_qratio_9901 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -711,7 +711,7 @@ OhlcvFeaturesDaily = R6::R6Class(
         roll::roll_quantile(returns_1, width = x, p = 0.95) /
           roll::roll_quantile(returns_1, width = x, p = 0.05)
       }), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_qratio_9505 = ohlcv[at_, .SD, .SDcols = c(ids, new_cols)]
         ohlcv[, (new_cols) := NULL]
       }
@@ -742,7 +742,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       ohlcv[up_move == 0, up_streaks := 0]
 
       # Sample
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         dt_streaks = ohlcv[at_, .SD, .SDcols = c(ids, "down_streaks", "up_streaks")]
         ohlcv[, c("down_move", "up_move", "down_streaks", "up_streaks") := NULL]
       }
@@ -762,7 +762,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       # maximum return
       print("Rolling max returns")
       ohlcv[, max_ret := frollapply(returns_1, 22, max, na.rm = TRUE), by = symbol]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = c("max_ret", new_cols)
         dt_opensource_1 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
         ohlcv[, c(cols_) := NULL]
@@ -779,7 +779,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       w_ = c(1,22 * 1:3)
       new_cols = paste0("dolvol_", w_)
       ohlcv[, (new_cols) := lapply(w_, function(y) shift(x=dolvolm, n=y))]
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         cols_ = c("dolvolm", new_cols)
         dt_opensource_2 = ohlcv[at_, .SD, .SDcols = c(ids, cols_)]
         ohlcv[, (cols_) := NULL]
@@ -815,7 +815,7 @@ OhlcvFeaturesDaily = R6::R6Class(
       print("Merge all tables.")
 
       # keep only relevant columns
-      if (!is.null(at_)) {
+      if (!is.null(self$at)) {
         ohlcv = Reduce(
           function(x, y)
             merge(x, y, by = c("symbol", "date"), all = TRUE),
